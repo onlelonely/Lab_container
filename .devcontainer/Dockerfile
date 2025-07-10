@@ -21,14 +21,7 @@ RUN apt-get update && apt-get install -y \
     r-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Install miniconda and micromamba
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
-    && bash miniconda.sh -b -p /opt/conda \
-    && rm miniconda.sh \
-    && /opt/conda/bin/conda install mamba micromamba -c conda-forge -y \
-    && chown -R $USERNAME:$USERNAME /opt/conda
-
-# Create non-root user (handle existing GID/UID gracefully)
+# Create non-root user first (handle existing GID/UID gracefully)
 RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
         groupadd --gid $USER_GID $USERNAME; \
     else \
@@ -48,6 +41,13 @@ RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
     fi \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Install miniconda and micromamba
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/conda \
+    && rm miniconda.sh \
+    && /opt/conda/bin/conda install mamba micromamba -c conda-forge -y \
+    && chown -R $USERNAME:$USERNAME /opt/conda
 
 # Stage 2: Development tools installation
 FROM base AS dev-tools
