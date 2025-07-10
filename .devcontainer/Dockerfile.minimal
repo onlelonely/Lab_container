@@ -1,0 +1,79 @@
+# Minimal test Dockerfile to debug build issues
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-22.04 AS base
+
+# Build arguments
+ARG USERNAME=devuser
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Install basic system dependencies first
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    wget \
+    git \
+    sudo \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    r-base \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user (handle existing GID/UID gracefully)
+RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
+        groupadd --gid $USER_GID $USERNAME; \
+    else \
+        GROUP_NAME=$(getent group $USER_GID | cut -d: -f1); \
+        if [ "$GROUP_NAME" != "$USERNAME" ]; then \
+            groupadd $USERNAME; \
+            USER_GID=$(getent group $USERNAME | cut -d: -f3); \
+        fi; \
+    fi \
+    && if ! getent passwd $USER_UID > /dev/null 2>&1; then \
+        useradd --uid $USER_UID --gid $USER_GID -m $USERNAME; \
+    else \
+        USER_NAME=$(getent passwd $USER_UID | cut -d: -f1); \
+        if [ "$USER_NAME" != "$USERNAME" ]; then \
+            useradd --gid $USER_GID -m $USERNAME; \
+        fi; \
+    fi \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Install miniconda instead
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/conda \
+    && rm miniconda.sh \
+    && /opt/conda/bin/conda install mamba -c conda-forge -y \
+    && ln -s /opt/conda/bin/mamba /usr/local/bin/micromamba
+
+# Set environment variables
+ENV USER=$USERNAME
+ENV HOME=/home/$USERNAME
+ENV PATH=/opt/conda/bin:$PATH
+ENV MAMBA_ROOT_PREFIX=/opt/conda
+
+# Switch to non-root user
+USER $USERNAME
+
+# Create workspace and logs directory
+RUN sudo mkdir -p /workspace/logs && sudo chown $USERNAME:$USERNAME /workspace/logs
+
+# Test stage - install minimal packages
+FROM base AS test
+
+# Create a simple test script
+RUN echo '#!/bin/bash\necho "Testing basic functionality..."\npython3 --version\nR --version\necho "Test completed successfully!"' > /tmp/test.sh \
+    && chmod +x /tmp/test.sh \
+    && /tmp/test.sh
+
+# Set working directory
+WORKDIR /workspace
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python3 -c "import sys; sys.exit(0)" && \
+        R -e "q(status=0)"
+
+# Default command
+CMD ["sleep", "infinity"]

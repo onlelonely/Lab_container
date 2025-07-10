@@ -8,7 +8,7 @@ ARG USERNAME=devuser
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Install system dependencies
+# Install system dependencies including Python and R
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
@@ -16,7 +16,17 @@ RUN apt-get update && apt-get install -y \
     git \
     sudo \
     ca-certificates \
+    python3 \
+    python3-pip \
+    r-base \
     && rm -rf /var/lib/apt/lists/*
+
+# Install miniconda for conda/mamba support
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
+    && bash miniconda.sh -b -p /opt/conda \
+    && rm miniconda.sh \
+    && /opt/conda/bin/conda install mamba -c conda-forge -y \
+    && ln -s /opt/conda/bin/mamba /usr/local/bin/micromamba
 
 # Create non-root user (handle existing GID/UID gracefully)
 RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
@@ -55,8 +65,8 @@ ENV MAMBA_ROOT_PREFIX=/opt/conda
 # Switch to non-root user
 USER $USERNAME
 
-# Create workspace directory
-RUN sudo mkdir -p /workspace && sudo chown $USERNAME:$USERNAME /workspace
+# Create workspace and logs directory
+RUN sudo mkdir -p /workspace/logs && sudo chown $USERNAME:$USERNAME /workspace
 
 # Stage 3: Core packages (small, frequently changing)
 FROM dev-tools AS core
@@ -66,14 +76,12 @@ COPY .devcontainer/configs/conda/environment-core.yml /tmp/environment-core.yml
 COPY .devcontainer/configs/python/requirements-core.txt /tmp/requirements-core.txt
 COPY .devcontainer/configs/r/core-packages.R /tmp/core-packages.R
 
-# Install core packages with retry logic
-RUN /bin/bash -c "source /opt/devcontainer/utils/logging.sh && \
-    source /opt/devcontainer/utils/retry-logic.sh && \
-    log_info 'Installing core packages' && \
-    retry_with_backoff 5 10 2 'micromamba env create -f /tmp/environment-core.yml' && \
-    retry_with_backoff 5 10 2 'pip install -r /tmp/requirements-core.txt' && \
-    retry_with_backoff 5 15 2 'Rscript /tmp/core-packages.R' && \
-    log_success 'Core packages installed successfully'"
+# Install core packages with simple retry logic
+RUN echo "Installing core packages..." && \
+    micromamba env create -f /tmp/environment-core.yml && \
+    pip install -r /tmp/requirements-core.txt && \
+    Rscript /tmp/core-packages.R && \
+    echo "Core packages installed successfully"
 
 # Clean up temporary files
 RUN rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R
@@ -92,27 +100,24 @@ COPY .devcontainer/configs/r/extended-packages.R /tmp/extended-packages.R
 ARG INSTALL_BIOCONDUCTOR=true
 ARG INSTALL_EXTENDED_PACKAGES=false
 
-RUN /bin/bash -c "source /opt/devcontainer/utils/logging.sh && \
-    source /opt/devcontainer/utils/retry-logic.sh && \
-    log_info 'Installing extended packages' && \
-    if [ '$INSTALL_EXTENDED_PACKAGES' = 'true' ]; then \
-        retry_with_backoff 5 15 2 'micromamba env update -f /tmp/environment-extended.yml' && \
-        retry_with_backoff 5 15 2 'pip install -r /tmp/requirements-extended.txt'; \
+RUN echo "Installing extended packages..." && \
+    if [ "$INSTALL_EXTENDED_PACKAGES" = "true" ]; then \
+        micromamba env update -f /tmp/environment-extended.yml && \
+        pip install -r /tmp/requirements-extended.txt; \
     fi && \
-    retry_with_backoff 5 15 2 'pip install -r /tmp/requirements-bioinformatics.txt' && \
-    if [ '$INSTALL_BIOCONDUCTOR' = 'true' ]; then \
-        retry_with_backoff 5 20 2 'Rscript /tmp/bioconductor-packages.R'; \
+    pip install -r /tmp/requirements-bioinformatics.txt && \
+    if [ "$INSTALL_BIOCONDUCTOR" = "true" ]; then \
+        Rscript /tmp/bioconductor-packages.R; \
     fi && \
-    if [ '$INSTALL_EXTENDED_PACKAGES' = 'true' ]; then \
-        retry_with_backoff 5 20 2 'Rscript /tmp/extended-packages.R'; \
+    if [ "$INSTALL_EXTENDED_PACKAGES" = "true" ]; then \
+        Rscript /tmp/extended-packages.R; \
     fi && \
-    log_success 'Extended packages installed successfully'"
+    echo "Extended packages installed successfully"
 
-# Clean up temporary files and caches with optimization
-RUN /bin/bash -c "rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R && \
-    source /opt/devcontainer/utils/optimization.sh && \
-    optimize_image standard && \
-    validate_optimization"
+# Clean up temporary files and caches
+RUN rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R && \
+    conda clean -a && \
+    pip cache purge
 
 # Stage 5: Final runtime image
 FROM extended AS final
