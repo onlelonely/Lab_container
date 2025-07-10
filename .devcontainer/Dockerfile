@@ -25,7 +25,8 @@ RUN apt-get update && apt-get install -y \
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
     && bash miniconda.sh -b -p /opt/conda \
     && rm miniconda.sh \
-    && /opt/conda/bin/conda install mamba micromamba -c conda-forge -y
+    && /opt/conda/bin/conda install mamba micromamba -c conda-forge -y \
+    && chown -R $USERNAME:$USERNAME /opt/conda
 
 # Create non-root user (handle existing GID/UID gracefully)
 RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
@@ -67,6 +68,11 @@ USER $USERNAME
 # Create workspace and logs directory
 RUN sudo mkdir -p /workspace/logs && sudo chown $USERNAME:$USERNAME /workspace
 
+# Ensure conda/R directories are writable
+RUN sudo mkdir -p /home/$USERNAME/.R && \
+    sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/.R && \
+    sudo chown -R $USERNAME:$USERNAME /opt/conda
+
 # Stage 3: Core packages (small, frequently changing)
 FROM dev-tools AS core
 
@@ -75,11 +81,15 @@ COPY configs/conda/environment-core.yml /tmp/environment-core.yml
 COPY configs/python/requirements-core.txt /tmp/requirements-core.txt
 COPY configs/r/core-packages.R /tmp/core-packages.R
 
-# Install core packages with simple retry logic
+# Install core packages with robust error handling
 RUN echo "Installing core packages..." && \
-    /opt/conda/bin/micromamba env update -n base -f /tmp/environment-core.yml && \
-    /opt/conda/bin/pip install -r /tmp/requirements-core.txt && \
-    Rscript /tmp/core-packages.R && \
+    echo "1. Updating conda environment..." && \
+    /opt/conda/bin/micromamba install -c conda-forge -c bioconda -c r \
+        python=3.11 r-base=4.3 jupyter jupyterlab notebook pip git curl wget --yes && \
+    echo "2. Installing Python packages..." && \
+    /opt/conda/bin/pip install --no-cache-dir -r /tmp/requirements-core.txt && \
+    echo "3. Installing R packages..." && \
+    /opt/conda/bin/Rscript /tmp/core-packages.R && \
     echo "Core packages installed successfully"
 
 # Clean up temporary files
