@@ -92,8 +92,8 @@ RUN echo "Installing core packages..." && \
     /opt/conda/bin/Rscript /tmp/core-packages.R && \
     echo "Core packages installed successfully"
 
-# Clean up temporary files
-RUN rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R
+# Clean up temporary files (use sudo for files copied as root)
+RUN sudo rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R
 
 # Stage 4: Extended packages (large, less frequently changing)
 FROM core AS extended
@@ -123,8 +123,8 @@ RUN echo "Installing extended packages..." && \
     fi && \
     echo "Extended packages installed successfully"
 
-# Clean up temporary files and caches
-RUN rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R && \
+# Clean up temporary files and caches (use sudo for files copied as root)
+RUN sudo rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R && \
     /opt/conda/bin/conda clean -a && \
     /opt/conda/bin/pip cache purge
 
