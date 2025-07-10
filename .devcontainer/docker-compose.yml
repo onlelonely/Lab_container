@@ -5,13 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: final
+      target: core
       args:
         - USERNAME=devuser
         - USER_UID=1000
         - USER_GID=1000
-        - INSTALL_BIOCONDUCTOR=${INSTALL_BIOCONDUCTOR:-true}
-        - INSTALL_EXTENDED_PACKAGES=${INSTALL_EXTENDED_PACKAGES:-false}
     volumes:
       - ../..:/workspace:cached
       - python_packages:/opt/conda/lib/python3.11/site-packages:cached
@@ -22,8 +20,6 @@ services:
       - PYTHON_VERSION=3.11
       - R_VERSION=4.3
       - WORKSPACE_DIR=/workspace
-      - INSTALL_BIOCONDUCTOR=${INSTALL_BIOCONDUCTOR:-true}
-      - INSTALL_EXTENDED_PACKAGES=${INSTALL_EXTENDED_PACKAGES:-false}
       - PARALLEL_JOBS=${PARALLEL_JOBS:-4}
       - ENABLE_LOGGING=${ENABLE_LOGGING:-true}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
