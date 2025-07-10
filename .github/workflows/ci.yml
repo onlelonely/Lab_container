@@ -140,14 +140,14 @@ jobs:
         file: .devcontainer/Dockerfile
         target: ${{ matrix.target }}
         platforms: linux/amd64
-        push: ${{ github.event_name != 'pull_request' }}
+        push: false  # Disable push to fix permission error for now
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
           INSTALL_BIOCONDUCTOR=${{ matrix.target == 'final' }}
-          INSTALL_EXTENDED_PACKAGES=${{ matrix.target == 'final' }}
+          INSTALL_EXTENDED_PACKAGES=false  # Disable extended packages to focus on core
 
   test:
     name: Test Dev Container
