@@ -3,21 +3,16 @@
 # Core R packages installation script
 cat("Installing core R packages...\n")
 
-# Base packages
+# Base packages (avoiding tidyverse duplicates)
 core_packages <- c(
-  "tidyverse",
-  "data.table",
-  "ggplot2",
-  "dplyr",
-  "readr",
-  "stringr",
-  "lubridate",
-  "devtools",
-  "roxygen2",
-  "testthat",
-  "lintr",
-  "rmarkdown",
-  "knitr"
+  "tidyverse",      # Includes ggplot2, dplyr, readr, stringr, lubridate, etc.
+  "data.table",     # High-performance data manipulation
+  "devtools",       # Development tools
+  "roxygen2",       # Documentation
+  "testthat",       # Testing framework
+  "lintr",          # Code linting
+  "rmarkdown",      # R Markdown documents
+  "knitr"           # Dynamic report generation
 )
 
 # Install packages with error handling

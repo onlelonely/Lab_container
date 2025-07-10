@@ -1,32 +1,35 @@
-# Extended data science packages
-numpy
-pandas
-matplotlib
-seaborn
-plotly
-bokeh
-altair
-scikit-learn
-scipy
-statsmodels
-xgboost
-lightgbm
-tensorflow
-torch
-transformers
-networkx
-gensim
-spacy
-nltk
+# Extended data science packages (avoiding conda duplicates)
+# Note: numpy, pandas, matplotlib, seaborn, plotly, scikit-learn, scipy handled by conda
+
+# Plotting and visualization
+bokeh>=3.0.0,<4.0.0
+altair>=4.2.0,<6.0.0
+
+# Machine learning (specific to pip)
+xgboost>=1.7.0,<2.0.0
+lightgbm>=3.3.0,<4.0.0
+
+# Deep learning (pip preferred for latest versions)
+tensorflow>=2.12.0,<3.0.0
+torch>=2.0.0,<3.0.0
+transformers>=4.20.0,<5.0.0
+
+# Text and graph processing
+networkx>=3.0,<4.0
+gensim>=4.3.0,<5.0.0
+spacy>=3.5.0,<4.0.0
+nltk>=3.8,<4.0
+
 # Visualization and reporting
-dash
-streamlit
-voila
-papermill
-nbconvert
+dash>=2.10.0,<3.0.0
+streamlit>=1.20.0,<2.0.0
+voila>=0.4.0,<1.0.0
+papermill>=2.4.0,<3.0.0
+nbconvert>=7.0.0,<8.0.0
+
 # Development tools
-mypy
-pylint
-autopep8
-isort
-bandit
+mypy>=1.0.0,<2.0.0
+pylint>=2.17.0,<3.0.0
+autopep8>=2.0.0,<3.0.0
+isort>=5.12.0,<6.0.0
+bandit>=1.7.0,<2.0.0

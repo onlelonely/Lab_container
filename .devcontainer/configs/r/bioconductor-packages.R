@@ -8,27 +8,32 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
 
-# Bioconductor packages
+# Core Bioconductor packages (excluding large genome packages)
 bioc_packages <- c(
+  # Core infrastructure
   "Biostrings",
-  "GenomicRanges",
+  "GenomicRanges", 
   "IRanges",
   "GenomeInfoDb",
   "biomaRt",
   "AnnotationDbi",
+  
+  # Statistical analysis
   "DESeq2",
-  "edgeR",
+  "edgeR", 
   "limma",
-  "GOstats",
+  
+  # Annotation databases (smaller ones)
   "GO.db",
   "KEGGREST",
-  "reactome.db",
   "org.Hs.eg.db",
-  "TxDb.Hsapiens.UCSC.hg38.knownGene",
-  "BSgenome.Hsapiens.UCSC.hg38",
+  
+  # File I/O and manipulation
   "VariantAnnotation",
   "Rsamtools",
   "rtracklayer",
+  
+  # Analysis tools
   "ChIPseeker",
   "clusterProfiler"
 )

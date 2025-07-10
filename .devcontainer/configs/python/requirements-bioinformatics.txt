@@ -1,19 +1,22 @@
 # Bioinformatics Python packages
-biopython
-pysam
-pyvcf
-pybedtools
-pyBigWig
-HTSeq
-cutadapt
-multiqc
-snakemake
-nextflow
-seqtk
-# Additional bioinformatics tools
-pandas-genomics
-scikit-allel
-pyranges
-pyfaidx
-cooler
-hicstraw
+# Note: biopython, pysam, pyvcf handled by conda for better compatibility
+
+# Genomics file handling (pip-only packages)
+pybedtools>=0.9.0,<1.0.0
+pyBigWig>=0.3.18,<1.0.0
+HTSeq>=2.0.0,<3.0.0
+
+# Analysis tools
+cutadapt>=4.4.0,<5.0.0
+multiqc>=1.14.0,<2.0.0
+
+# Workflow management (latest versions via pip)
+snakemake>=7.25.0,<8.0.0
+
+# Specialized genomics packages
+pandas-genomics>=0.8.0,<1.0.0
+scikit-allel>=1.3.0,<2.0.0
+pyranges>=0.0.120,<1.0.0
+pyfaidx>=0.7.0,<1.0.0
+cooler>=0.9.0,<1.0.0
+hicstraw>=1.3.0,<2.0.0

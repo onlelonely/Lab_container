@@ -1,50 +1,28 @@
-name: extended
 channels:
   - conda-forge
   - bioconda
   - r
 dependencies:
-  - numpy
-  - pandas
-  - matplotlib
-  - seaborn
-  - plotly
-  - scikit-learn
-  - scipy
-  - statsmodels
-  - biopython
-  - pysam
-  - pyvcf
-  - bedtools
-  - samtools
-  - bcftools
-  - blast
-  - r-tidyverse
-  - r-ggplot2
-  - r-dplyr
-  - r-readr
-  - r-stringr
-  - r-lubridate
-  - r-data.table
-  - r-plotly
-  - r-dt
-  - r-shiny
-  - r-rmarkdown
-  - r-knitr
-  - r-devtools
-  - r-roxygen2
-  - r-testthat
-  - r-lintr
-  - bioconductor-biostrings
-  - bioconductor-genomicranges
-  - bioconductor-iranges
-  - bioconductor-genomeinfodb
-  - bioconductor-biomart
-  - bioconductor-annotationdbi
-  - bioconductor-deseq2
-  - bioconductor-edger
-  - bioconductor-limma
-  - bioconductor-gostats
-  - bioconductor-go.db
-  - bioconductor-keggrest
-  - bioconductor-reactome.db
+  # Data science packages
+  - numpy>=1.24.0,<2.0.0
+  - pandas>=2.0.0,<3.0.0
+  - matplotlib>=3.7.0,<4.0.0
+  - seaborn>=0.12.0,<1.0.0
+  - plotly>=5.14.0,<6.0.0
+  - scikit-learn>=1.3.0,<2.0.0
+  - scipy>=1.10.0,<2.0.0
+  - statsmodels>=0.14.0,<1.0.0
+  
+  # Bioinformatics packages
+  - biopython>=1.81,<2.0
+  - pysam>=0.21.0,<1.0.0
+  - pyvcf>=0.6.8,<1.0.0
+  - bedtools>=2.31.0,<3.0.0
+  - samtools>=1.17,<2.0
+  - bcftools>=1.17,<2.0
+  
+  # R packages that work better with conda
+  - r-data.table>=1.14.0,<2.0.0
+  - r-plotly>=4.10.0,<5.0.0
+  - r-dt>=0.28,<1.0
+  - r-shiny>=1.7.0,<2.0.0

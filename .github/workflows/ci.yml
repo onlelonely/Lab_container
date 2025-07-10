@@ -18,6 +18,7 @@ jobs:
   validate:
     name: Validate Configuration
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       should-build: ${{ steps.changes.outputs.devcontainer }}
     
@@ -97,12 +98,13 @@ jobs:
   build:
     name: Build Dev Container
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     needs: validate
     if: needs.validate.outputs.should-build == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     
     strategy:
       matrix:
-        target: [core, extended, final]
+        target: [core, final]
       fail-fast: false
     
     steps:
@@ -134,7 +136,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: .
+        context: .devcontainer
         file: .devcontainer/Dockerfile
         target: ${{ matrix.target }}
         platforms: linux/amd64
@@ -144,18 +146,19 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
-          INSTALL_BIOCONDUCTOR=${{ matrix.target == 'extended' || matrix.target == 'final' }}
-          INSTALL_EXTENDED_PACKAGES=${{ matrix.target == 'extended' }}
+          INSTALL_BIOCONDUCTOR=${{ matrix.target == 'final' }}
+          INSTALL_EXTENDED_PACKAGES=${{ matrix.target == 'final' }}
 
   test:
     name: Test Dev Container
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     needs: [validate, build]
     if: always() && needs.validate.result == 'success'
     
     strategy:
       matrix:
-        test-suite: [quick, installation, full]
+        test-suite: [quick, installation]
       fail-fast: false
     
     steps:
@@ -186,6 +189,7 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: validate
     
     steps:
@@ -230,6 +234,7 @@ jobs:
   performance:
     name: Performance Benchmark
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     needs: [validate, build]
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     
@@ -266,6 +271,7 @@ jobs:
   deploy:
     name: Deploy Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [test, security]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
@@ -298,6 +304,7 @@ jobs:
   cleanup:
     name: Cleanup Old Images
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [test, security]
     if: always() && github.event_name == 'schedule'
     

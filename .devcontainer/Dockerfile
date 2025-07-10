@@ -21,12 +21,11 @@ RUN apt-get update && apt-get install -y \
     r-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Install miniconda for conda/mamba support
+# Install miniconda and micromamba
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
     && bash miniconda.sh -b -p /opt/conda \
     && rm miniconda.sh \
-    && /opt/conda/bin/conda install mamba -c conda-forge -y \
-    && ln -s /opt/conda/bin/mamba /usr/local/bin/micromamba
+    && /opt/conda/bin/conda install mamba micromamba -c conda-forge -y
 
 # Create non-root user (handle existing GID/UID gracefully)
 RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
@@ -53,7 +52,7 @@ RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
 FROM base AS dev-tools
 
 # Copy utility scripts
-COPY .devcontainer/scripts/utils/ /opt/devcontainer/utils/
+COPY scripts/utils/ /opt/devcontainer/utils/
 RUN chmod +x /opt/devcontainer/utils/*.sh
 
 # Set environment variables
@@ -72,14 +71,14 @@ RUN sudo mkdir -p /workspace/logs && sudo chown $USERNAME:$USERNAME /workspace
 FROM dev-tools AS core
 
 # Copy core configuration files
-COPY .devcontainer/configs/conda/environment-core.yml /tmp/environment-core.yml
-COPY .devcontainer/configs/python/requirements-core.txt /tmp/requirements-core.txt
-COPY .devcontainer/configs/r/core-packages.R /tmp/core-packages.R
+COPY configs/conda/environment-core.yml /tmp/environment-core.yml
+COPY configs/python/requirements-core.txt /tmp/requirements-core.txt
+COPY configs/r/core-packages.R /tmp/core-packages.R
 
 # Install core packages with simple retry logic
 RUN echo "Installing core packages..." && \
-    micromamba env create -f /tmp/environment-core.yml && \
-    pip install -r /tmp/requirements-core.txt && \
+    /opt/conda/bin/micromamba env update -n base -f /tmp/environment-core.yml && \
+    /opt/conda/bin/pip install -r /tmp/requirements-core.txt && \
     Rscript /tmp/core-packages.R && \
     echo "Core packages installed successfully"
 
@@ -90,11 +89,11 @@ RUN rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R
 FROM core AS extended
 
 # Copy extended configuration files
-COPY .devcontainer/configs/conda/environment-extended.yml /tmp/environment-extended.yml
-COPY .devcontainer/configs/python/requirements-extended.txt /tmp/requirements-extended.txt
-COPY .devcontainer/configs/python/requirements-bioinformatics.txt /tmp/requirements-bioinformatics.txt
-COPY .devcontainer/configs/r/bioconductor-packages.R /tmp/bioconductor-packages.R
-COPY .devcontainer/configs/r/extended-packages.R /tmp/extended-packages.R
+COPY configs/conda/environment-extended.yml /tmp/environment-extended.yml
+COPY configs/python/requirements-extended.txt /tmp/requirements-extended.txt
+COPY configs/python/requirements-bioinformatics.txt /tmp/requirements-bioinformatics.txt
+COPY configs/r/bioconductor-packages.R /tmp/bioconductor-packages.R
+COPY configs/r/extended-packages.R /tmp/extended-packages.R
 
 # Install extended packages conditionally
 ARG INSTALL_BIOCONDUCTOR=true
@@ -102,10 +101,10 @@ ARG INSTALL_EXTENDED_PACKAGES=false
 
 RUN echo "Installing extended packages..." && \
     if [ "$INSTALL_EXTENDED_PACKAGES" = "true" ]; then \
-        micromamba env update -f /tmp/environment-extended.yml && \
-        pip install -r /tmp/requirements-extended.txt; \
+        /opt/conda/bin/micromamba env update -f /tmp/environment-extended.yml && \
+        /opt/conda/bin/pip install -r /tmp/requirements-extended.txt; \
     fi && \
-    pip install -r /tmp/requirements-bioinformatics.txt && \
+    /opt/conda/bin/pip install -r /tmp/requirements-bioinformatics.txt && \
     if [ "$INSTALL_BIOCONDUCTOR" = "true" ]; then \
         Rscript /tmp/bioconductor-packages.R; \
     fi && \
@@ -116,18 +115,18 @@ RUN echo "Installing extended packages..." && \
 
 # Clean up temporary files and caches
 RUN rm -rf /tmp/*.yml /tmp/*.txt /tmp/*.R && \
-    conda clean -a && \
-    pip cache purge
+    /opt/conda/bin/conda clean -a && \
+    /opt/conda/bin/pip cache purge
 
 # Stage 5: Final runtime image
 FROM extended AS final
 
 # Copy installation and management scripts
-COPY .devcontainer/scripts/ /opt/devcontainer/scripts/
-RUN sudo chmod +x /opt/devcontainer/scripts/**/*.sh
+COPY scripts/ /opt/devcontainer/scripts/
+RUN sudo find /opt/devcontainer/scripts -name "*.sh" -exec chmod +x {} \;
 
 # Copy test scripts
-COPY .devcontainer/tests/ /opt/devcontainer/tests/
+COPY tests/ /opt/devcontainer/tests/
 RUN sudo chmod +x /opt/devcontainer/tests/*.sh
 
 # Set working directory
@@ -135,9 +134,9 @@ WORKDIR /workspace
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)" && \
+    CMD python3 -c "import sys; sys.exit(0)" && \
         R -e "q(status=0)" && \
-        micromamba info > /dev/null
+        /opt/conda/bin/micromamba info > /dev/null
 
 # Default command
 CMD ["sleep", "infinity"]
