@@ -1,0 +1,3 @@
+# Ignore dataset folder
+permanent_storage/**
+project/**

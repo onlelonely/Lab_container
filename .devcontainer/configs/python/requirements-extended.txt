@@ -1,0 +1,32 @@
+# Extended data science packages
+numpy
+pandas
+matplotlib
+seaborn
+plotly
+bokeh
+altair
+scikit-learn
+scipy
+statsmodels
+xgboost
+lightgbm
+tensorflow
+torch
+transformers
+networkx
+gensim
+spacy
+nltk
+# Visualization and reporting
+dash
+streamlit
+voila
+papermill
+nbconvert
+# Development tools
+mypy
+pylint
+autopep8
+isort
+bandit

@@ -1,0 +1,132 @@
+# Dev container .dockerignore
+# Exclude files and directories that shouldn't be copied to the Docker build context
+
+# Git repository
+.git/
+.gitignore
+.gitmodules
+
+# Documentation
+*.md
+!README.md
+docs/
+*.txt
+!requirements*.txt
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# R files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Package manager files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.cache
+*.bak
+*.swp
+*.swo
+
+# Test files and coverage
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+.nyc_output
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Workspace specific directories
+project/
+permanent_storage/
+logs/
+
+# Docker files (to avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Large data files
+*.csv
+*.tsv
+*.json
+*.xml
+*.db
+*.sqlite
+*.h5
+*.hdf5
+*.parquet
+
+# Compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Test results
+test-results/
+coverage/
+
+# Backup files
+*.backup
+*.orig

@@ -1,0 +1,11 @@
+# Core Python packages
+jupyter
+jupyterlab
+notebook
+ipykernel
+pre-commit
+black
+flake8
+pytest
+requests
+click

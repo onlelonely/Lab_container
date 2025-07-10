@@ -1,0 +1,23 @@
+name: base
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - python=3.11
+  - r-base=4.3
+  - micromamba
+  - jupyter
+  - jupyterlab
+  - notebook
+  - pip
+  - git
+  - curl
+  - wget
+  - build-essential
+  - pip:
+    - pre-commit
+    - black
+    - flake8
+    - pytest
+    - ipykernel

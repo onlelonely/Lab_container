@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+      args:
+        - USERNAME=devuser
+        - USER_UID=1000
+        - USER_GID=1000
+        - INSTALL_BIOCONDUCTOR=${INSTALL_BIOCONDUCTOR:-true}
+        - INSTALL_EXTENDED_PACKAGES=${INSTALL_EXTENDED_PACKAGES:-false}
+    volumes:
+      - ../..:/workspace:cached
+      - python_packages:/opt/conda/lib/python3.11/site-packages:cached
+      - r_packages:/opt/conda/lib/R/library:cached
+      - ~/.ssh:/home/devuser/.ssh:ro
+      - ~/.gitconfig:/home/devuser/.gitconfig:ro
+    environment:
+      - PYTHON_VERSION=3.11
+      - R_VERSION=4.3
+      - WORKSPACE_DIR=/workspace
+      - INSTALL_BIOCONDUCTOR=${INSTALL_BIOCONDUCTOR:-true}
+      - INSTALL_EXTENDED_PACKAGES=${INSTALL_EXTENDED_PACKAGES:-false}
+      - PARALLEL_JOBS=${PARALLEL_JOBS:-4}
+      - ENABLE_LOGGING=${ENABLE_LOGGING:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    working_dir: /workspace
+    command: sleep infinity
+    user: devuser
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Core-only development container (faster startup)
+  devcontainer-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: core
+      args:
+        - USERNAME=devuser
+        - USER_UID=1000
+        - USER_GID=1000
+    volumes:
+      - ../..:/workspace:cached
+      - python_packages_core:/opt/conda/lib/python3.11/site-packages:cached
+      - r_packages_core:/opt/conda/lib/R/library:cached
+    environment:
+      - PYTHON_VERSION=3.11
+      - R_VERSION=4.3
+      - WORKSPACE_DIR=/workspace
+    working_dir: /workspace
+    command: sleep infinity
+    user: devuser
+    stdin_open: true
+    tty: true
+    profiles:
+      - core
+
+  # Extended development container (full features)
+  devcontainer-extended:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: extended
+      args:
+        - USERNAME=devuser
+        - USER_UID=1000
+        - USER_GID=1000
+        - INSTALL_BIOCONDUCTOR=true
+        - INSTALL_EXTENDED_PACKAGES=true
+    volumes:
+      - ../..:/workspace:cached
+      - python_packages_extended:/opt/conda/lib/python3.11/site-packages:cached
+      - r_packages_extended:/opt/conda/lib/R/library:cached
+    environment:
+      - PYTHON_VERSION=3.11
+      - R_VERSION=4.3
+      - WORKSPACE_DIR=/workspace
+      - INSTALL_BIOCONDUCTOR=true
+      - INSTALL_EXTENDED_PACKAGES=true
+      - PARALLEL_JOBS=4
+    working_dir: /workspace
+    command: sleep infinity
+    user: devuser
+    stdin_open: true
+    tty: true
+    profiles:
+      - extended
+
+volumes:
+  python_packages:
+  r_packages:
+  python_packages_core:
+  r_packages_core:
+  python_packages_extended:
+  r_packages_extended:

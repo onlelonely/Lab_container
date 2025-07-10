@@ -1,0 +1,19 @@
+# Bioinformatics Python packages
+biopython
+pysam
+pyvcf
+pybedtools
+pyBigWig
+HTSeq
+cutadapt
+multiqc
+snakemake
+nextflow
+seqtk
+# Additional bioinformatics tools
+pandas-genomics
+scikit-allel
+pyranges
+pyfaidx
+cooler
+hicstraw
