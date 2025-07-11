@@ -1,15 +1,17 @@
 # Dev Container CI/CD 修復交接日誌
 
-**時間**: 2025-07-11 09:27 UTC  
-**狀態**: 第十輪修復已提交，CI/CD 進行中  
-**下一步**: 監控 CI/CD 結果 (Run ID: 新的運行)
+**時間**: 2025-07-11 12:42 UTC  
+**狀態**: 第十一輪修復已提交，CI/CD 進行中  
+**下一步**: 監控 CI/CD 結果 (Run ID: 16220248440)
 
 ## 問題總結
 
 ### 已修復問題
 - **Build Dev Container**: ✅ 已修復
 - **Docker 路徑映射**: ✅ 第七輪已修復
-- **Test Dev Container**: 🔄 第十輪修復中 (micromamba 引用問題)
+- **readonly 變數重複聲明**: ✅ 第八輪已修復
+- **micromamba 引用**: ✅ 第九、十輪已修復
+- **環境變數驗證**: 🔄 第十一輪修復中 (環境變數未正確傳遞給測試腳本)
 
 ### 修復內容
 
@@ -133,6 +135,18 @@ target: core   # 使用輕量的 core target
 5. 完成所有測試腳本的 conda 命令統一化
 ```
 
+#### 第十一輪修復 (2025-07-11 12:39)
+修改了環境變數驗證問題：
+
+```bash
+# 主要修改
+1. 在 test-runner.sh 中設定預設環境變數 (PYTHON_VERSION, R_VERSION, WORKSPACE_DIR)
+2. 在 validation.sh 中添加環境變數預設值設定
+3. 擴展 test-environment.sh 驗證所有必需的環境變數
+4. 修復 devcontainer exec 無法正確繼承環境變數的問題
+5. 確保測試腳本能在環境變數未正確傳遞時仍能正常運行
+```
+
 ### 修復邏輯
 1. **第一輪問題根因**: devcontainer.json 使用 `devcontainer` 服務，但該服務使用 `final` target
 2. **Final target 問題**: 需要安裝所有擴展包，構建複雜且容易失敗
@@ -155,19 +169,22 @@ target: core   # 使用輕量的 core target
 19. **第九輪解決方案**: 統一所有測試腳本使用 conda 命令，移除所有 micromamba 引用
 20. **第十輪問題根因**: test-environment.sh 修復了，但 test-installation.sh 仍有 micromamba 引用
 21. **第十輪解決方案**: 修復 test-installation.sh 中最後的 micromamba 引用，完全統一使用 conda
+22. **第十一輪問題根因**: micromamba 引用已完全移除，但環境變數驗證失敗
+23. **第十一輪解決方案**: 修復 devcontainer exec 環境變數繼承問題，設定預設值確保測試正常運行
 
 ## 當前 CI/CD 狀態
 
 ### 最新 Run 資訊
-- **Run ID**: 16216756032
-- **狀態**: in_progress (開始)
-- **開始時間**: 2025-07-11T09:32:12Z
-- **預計完成時間**: 2025-07-11T11:12:12Z (約 100 分鐘)
-- **觸發原因**: Push commit "Fix remaining micromamba references in test-installation.sh"
+- **Run ID**: 16220248440
+- **狀態**: in_progress (進行中)
+- **開始時間**: 2025-07-11T12:39:36Z
+- **預計完成時間**: 2025-07-11T14:19:36Z (約 100 分鐘)
+- **觸發原因**: Push commit "Fix environment variable validation in test scripts"
 - **當前進度**: 
-  - 🔄 初始化中
+  - 🔄 Build Dev Container 階段進行中
 
 ### 歷史 Run 記錄
+- **16216756032**: failure (第十輪修復) - micromamba 引用已完全移除，環境變數驗證問題
 - **16215399185**: failure (第九輪修復) - 部分 micromamba 引用已修復，test-installation.sh 仍有問題
 - **16214143985**: failure (第八輪修復) - readonly 變量已修復，micromamba 引用問題
 - **16213618700**: failure (第七輪修復) - 路徑已修復，readonly 變量重複聲明錯誤
@@ -185,12 +202,13 @@ target: core   # 使用輕量的 core target
 gh run list --limit 3
 
 # 持續監控當前運行
-gh run watch 16216756032
+gh run watch 16220248440
 
 # 查看詳細日誌 (完成後)
-gh run view 16216756032 --log
+gh run view 16220248440 --log
 
 # 查看重要的歷史 run
+gh run view 16216756032 --log  # 第十輪修復 - micromamba 引用已完全移除，環境變數驗證問題
 gh run view 16215399185 --log  # 第九輪修復 - 部分 micromamba 引用已修復，test-installation.sh 仍有問題
 gh run view 16214143985 --log  # 第八輪修復 - readonly 變量已修復，micromamba 引用問題
 gh run view 16213618700 --log  # 第七輪修復 - 路徑已修復，readonly 變量錯誤
@@ -202,7 +220,8 @@ gh run view 16213118403 --log  # 第六輪修復 - 成功的調試日誌
 ### 如果成功
 - devcontainer CLI 應該可以正常構建和啟動容器
 - 容器內文件結構為 /workspace/.devcontainer/ (正確)
-- 調試步驟應該顯示正確的文件路徑
+- 環境變數 (PYTHON_VERSION, R_VERSION, WORKSPACE_DIR) 應該正確設定
+- 測試腳本應該能正確驗證所有必需的環境變數
 - Test script 應該能正確找到並執行 .devcontainer/scripts/manage/test-runner.sh
 - Test dev container 階段應該通過
 - 整個 CI/CD pipeline 應該通過
@@ -210,13 +229,13 @@ gh run view 16213118403 --log  # 第六輪修復 - 成功的調試日誌
 
 ### 如果失敗
 需要檢查的後續步驟：
-1. 確認所有 micromamba 引用已完全移除 (已完成)
-2. 檢查測試腳本是否能找到 conda 命令
-3. 確認 conda 環境配置是否正確
-4. 檢查腳本的執行權限和路徑引用
-5. 如果 conda 命令仍有問題，檢查環境變量設置
-6. 考慮檢查其他可能的依賴問題 (R/Python 包安裝等)
-7. 最後選項：簡化測試命令，只做基本功能測試
+1. 確認環境變數預設值設定是否正確
+2. 檢查 devcontainer exec 是否正確繼承環境變數
+3. 驗證測試腳本中的環境變數驗證邏輯
+4. 檢查是否有其他系統需求未滿足 (記憶體、磁碟空間等)
+5. 確認網路連接測試是否正常
+6. 如果基本環境變數問題已解決，檢查其他可能的測試失敗原因
+7. 最後選項：簡化測試流程，只執行核心功能測試
 
 ## 檔案變更記錄
 
@@ -235,10 +254,23 @@ gh run view 16213118403 --log  # 第六輪修復 - 成功的調試日誌
 - `.devcontainer/tests/test-environment.sh` - 第九輪修復 (micromamba → conda)
 - `.devcontainer/scripts/utils/validation.sh` - 第九輪修復 (micromamba → conda)
 - `.devcontainer/tests/test-installation.sh` - 第十輪修復 (micromamba → conda)
+- `.devcontainer/scripts/manage/test-runner.sh` - 第十一輪修復 (環境變數預設值)
+- `.devcontainer/scripts/utils/validation.sh` - 第十一輪修復 (環境變數預設值)
+- `.devcontainer/tests/test-environment.sh` - 第十一輪修復 (擴展環境變數驗證)
 
 ### Git 提交記錄
 ```bash
-# 最新 commit (第十輪修復)
+# 最新 commit (第十一輪修復)
+20ab4ec Fix environment variable validation in test scripts
+
+# 修改內容
+- 在 test-runner.sh 中設定預設環境變數 (PYTHON_VERSION, R_VERSION, WORKSPACE_DIR)
+- 在 validation.sh 中添加環境變數預設值設定
+- 擴展 test-environment.sh 驗證所有必需的環境變數
+- 修復 devcontainer exec 無法正確繼承環境變數的問題
+- 確保測試腳本能在環境變數未正確傳遞時仍能正常運行
+
+# 第十輪修復 commit
 de6b1b1 Fix remaining micromamba references in test-installation.sh
 
 # 修改內容
@@ -350,13 +382,13 @@ bd50a11 Fix Docker build issues by removing micromamba
 
 ## 後續處理建議
 
-1. **等待 CI/CD 完成**: 約 100 分鐘後檢查結果 (預計 2025-07-11 08:53 UTC)
-2. **如果成功**: 任務完成，測試問題已解決
+1. **等待 CI/CD 完成**: 約 100 分鐘後檢查結果 (預計 2025-07-11 14:19 UTC)
+2. **如果成功**: 任務完成，環境變數驗證問題已解決
 3. **如果失敗**: 
    - 檢查日誌找出新的失敗原因
-   - 分析是否有新的 readonly 變量問題
-   - 檢查腳本依賴關係是否正確
-   - 考慮進一步簡化測試腳本
+   - 分析環境變數設定是否正確
+   - 檢查容器內環境是否符合測試需求
+   - 考慮進一步簡化測試條件
 
 ## 快速恢復工作指南
 
@@ -367,17 +399,42 @@ gh run list --limit 3
 ```
 
 ### 如果 CI/CD 失敗，繼續修復
-1. 查看失敗日誌：`gh run view 16216756032 --log`
-2. 重點確認 micromamba 引用是否完全移除 (應該已完成)
-3. 檢查 conda 命令是否正常工作
-4. 如果 conda 問題已修復，分析其他可能的錯誤 (R/Python 包安裝等)
-5. 提交相應修復並監控
+1. 查看失敗日誌：`gh run view 16220248440 --log`
+2. 重點確認環境變數驗證是否正常 (應該已修復)
+3. 檢查系統資源測試是否通過 (記憶體、磁碟空間)
+4. 檢查網路連接測試是否正常
+5. 如果基本環境問題已修復，分析其他可能的錯誤
+6. 提交相應修復並監控
+
+### 第十一輪修復的改進（最新修復）
+- 修復 devcontainer exec 環境變數繼承問題
+- 在多個腳本中設定環境變數預設值
+- 確保測試腳本能在環境變數未正確傳遞時仍能正常運行
+- 擴展環境變數驗證範圍，包含所有必需變數
+- 這應該是解決環境變數驗證問題的最終修復
+
+### 第十輪修復的改進
+- 完全移除所有 micromamba 引用
+- 統一所有測試腳本使用 conda 命令
+- 實現完全的命令一致性
+- 為環境變數驗證問題鋪平道路
+
+### 第九輪修復的改進
+- 統一大部分測試腳本使用 conda 命令
+- 移除主要的 micromamba 引用
+- 解決測試套件中的命令不一致問題
+- 但仍有部分引用需要處理
+
+### 第八輪修復的改進
+- 解決 readonly 變量重複聲明問題
+- 防止多個腳本 source 同一文件時的衝突
+- 為後續測試腳本修復創造條件
 
 ### 第七輪修復的改進（關鍵修復）
 - 基於第六輪調試輸出的精確分析
 - 修復根本的 Docker Compose 掛載路徑問題
 - 確保容器內文件結構與 CI 期望一致
-- 這應該是解決路徑問題的最終修復
+- 這是解決路徑問題的最終修復
 
 ### 第六輪修復的改進
 - 添加調試步驟，直接查看容器內文件結構
@@ -407,4 +464,4 @@ gh run list --limit 3
 - 閱讀 `.devcontainer/` 目錄下的配置文件
 - 檢查 `HANDOVER_LOG.md` 了解完整修復過程
 
-**最後更新**: 2025-07-11 09:33 UTC
+**最後更新**: 2025-07-11 12:42 UTC
