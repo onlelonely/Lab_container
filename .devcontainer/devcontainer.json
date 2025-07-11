@@ -4,34 +4,7 @@
     "service": "devcontainer",
     "workspaceFolder": "/workspace",
     "shutdownAction": "stopCompose",
-    "features": {
-        "ghcr.io/mamba-org/devcontainer-features/micromamba:1": {
-            "version": "latest",
-            "channels": "conda-forge,bioconda,r",
-            "envName": "base"
-        },
-        "ghcr.io/devcontainers/features/python:1": {
-            "version": "3.11"
-        },
-        "ghcr.io/rocker-org/devcontainer-features/r-apt:latest": {
-            "vscodeRSupport": "full",
-            "installDevTools": true,
-            "installRadian": true,
-            "installRMarkdown": true,
-            "installVscDebugger": true
-        },
-        "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-            "packages": "r-cran-data.table,r-cran-tidyverse",
-            "upgradePackages": true
-        }
-    },
-    "overrideFeatureInstallOrder": [
-        "ghcr.io/mamba-org/devcontainer-features/micromamba",
-        "ghcr.io/rocker-org/devcontainer-features/apt-packages:1",
-        "ghcr.io/rocker-org/devcontainer-features/r-apt"
-    ],
     "updateContentCommand": "bash /workspace/.devcontainer/scripts/install/install-core.sh",
-    "postCreateCommand": "bash /workspace/.devcontainer/scripts/install/install-extended.sh",
     "customizations": {
         "vscode": {
             "settings": {
@@ -49,7 +22,7 @@
                     ]
                 },
                 "[r]": {
-                    "rterm.linux": "/usr/local/bin/radian",
+                    "rterm.linux": "/opt/conda/bin/radian",
                     "r.bracketedPaste": true
                 }
             },
