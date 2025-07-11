@@ -173,10 +173,15 @@ jobs:
         devcontainer build --workspace-folder .
         devcontainer up --workspace-folder .
     
+    - name: Debug container structure
+      run: |
+        devcontainer exec --workspace-folder . \
+          bash -c "pwd && ls -la && ls -la .devcontainer/scripts/manage/"
+    
     - name: Run test suite
       run: |
         devcontainer exec --workspace-folder . \
-          bash /workspace/.devcontainer/scripts/manage/test-runner.sh ${{ matrix.test-suite }} false true
+          bash .devcontainer/scripts/manage/test-runner.sh ${{ matrix.test-suite }} false true
     
     - name: Upload test results
       if: always()
