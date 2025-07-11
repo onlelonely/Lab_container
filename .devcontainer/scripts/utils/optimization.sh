@@ -35,9 +35,9 @@ cleanup_image() {
     fi
     
     # Clean conda cache
-    if command -v micromamba > /dev/null 2>&1; then
+    if command -v conda > /dev/null 2>&1; then
         log_info "Cleaning conda cache..."
-        micromamba clean --all --yes
+        conda clean --all --yes
     fi
     
     # Clean temporary files
@@ -161,21 +161,21 @@ remove_unnecessary_packages() {
 optimize_conda_env() {
     log_info "Optimizing conda environment..."
     
-    if command -v micromamba > /dev/null 2>&1; then
+    if command -v conda > /dev/null 2>&1; then
         # Remove unused packages
-        micromamba clean --all --yes
+        conda clean --all --yes
         
         # Optimize package cache
-        micromamba clean --index-cache --yes
-        micromamba clean --lock --yes
-        micromamba clean --tarballs --yes
+        conda clean --index-cache --yes
+        conda clean --lock --yes
+        conda clean --tarballs --yes
         
         # Remove orphaned packages
-        micromamba clean --packages --yes
+        conda clean --packages --yes
         
         log_success "Conda environment optimized"
     else
-        log_warning "Micromamba not found, skipping conda optimization"
+        log_warning "Conda not found, skipping conda optimization"
     fi
 }
 
@@ -259,9 +259,9 @@ validate_optimization() {
         validation_failed=1
     fi
     
-    # Test micromamba
-    if ! micromamba --version 2>/dev/null; then
-        log_error "Micromamba validation failed after optimization"
+    # Test conda
+    if ! conda --version 2>/dev/null; then
+        log_error "Conda validation failed after optimization"
         validation_failed=1
     fi
     

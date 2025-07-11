@@ -68,8 +68,8 @@ main() {
         log_warning "R validation failed"
     fi
     
-    if ! validate_micromamba; then
-        log_warning "Micromamba validation failed"
+    if ! validate_conda; then
+        log_warning "Conda validation failed"
     fi
     
     # Test core packages
@@ -83,21 +83,21 @@ main() {
 install_core_sequential() {
     # Install core conda environment
     log_info "Installing core conda environment..."
-    if ! retry_with_backoff 5 10 2 "micromamba env update -f $CONFIG_DIR/conda/environment-core.yml"; then
+    if ! retry_with_backoff 5 10 2 "conda env update -f $CONFIG_DIR/conda/environment-core.yml"; then
         log_error "Failed to install core conda environment"
         exit 1
     fi
     
     # Install core Python packages
     log_info "Installing core Python packages..."
-    if ! retry_with_backoff 5 10 2 "pip install -r $CONFIG_DIR/python/requirements-core.txt"; then
+    if ! retry_with_backoff 5 10 2 "/opt/conda/bin/pip install -r $CONFIG_DIR/python/requirements-core.txt"; then
         log_error "Failed to install core Python packages"
         exit 1
     fi
     
     # Install core R packages
     log_info "Installing core R packages..."
-    if ! retry_with_backoff 5 15 2 "Rscript $CONFIG_DIR/r/core-packages.R"; then
+    if ! retry_with_backoff 5 15 2 "/opt/conda/bin/Rscript $CONFIG_DIR/r/core-packages.R"; then
         log_error "Failed to install core R packages"
         exit 1
     fi

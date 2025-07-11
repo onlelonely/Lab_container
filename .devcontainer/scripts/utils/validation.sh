@@ -105,19 +105,19 @@ validate_r() {
     return 0
 }
 
-# Validate micromamba installation
-validate_micromamba() {
-    log_info "Validating micromamba installation..."
+# Validate conda installation
+validate_conda() {
+    log_info "Validating conda installation..."
     
-    if ! validate_command "micromamba"; then
+    if ! validate_command "conda"; then
         return 1
     fi
     
-    # Test micromamba functionality
-    if micromamba info > /dev/null 2>&1; then
-        log_success "✓ micromamba is functional"
+    # Test conda functionality
+    if conda info > /dev/null 2>&1; then
+        log_success "✓ conda is functional"
     else
-        log_error "micromamba is installed but not functional"
+        log_error "conda is installed but not functional"
         return 1
     fi
     
@@ -212,7 +212,7 @@ validate_all() {
         validation_failed=1
     fi
     
-    if ! validate_micromamba; then
+    if ! validate_conda; then
         validation_failed=1
     fi
     
@@ -229,4 +229,4 @@ validate_all() {
 }
 
 # Export functions for use in other scripts
-export -f validate_environment validate_directory validate_command validate_python validate_r validate_micromamba validate_package validate_system_resources validate_all
+export -f validate_environment validate_directory validate_command validate_python validate_r validate_conda validate_package validate_system_resources validate_all
