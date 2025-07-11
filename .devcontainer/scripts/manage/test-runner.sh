@@ -23,6 +23,11 @@ readonly CI_MODE="${CI:-false}"
 # Create test results directory
 mkdir -p "$TEST_RESULTS_DIR"
 
+# Set default environment variables if not already set
+export PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
+export R_VERSION="${R_VERSION:-4.3}"
+export WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
+
 # Test suite configuration
 declare -A TEST_SUITES=(
     ["quick"]="test-environment.sh"

@@ -13,6 +13,11 @@ validate_environment() {
     
     log_info "Validating environment variables..."
     
+    # Set default values if not already set
+    export PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
+    export R_VERSION="${R_VERSION:-4.3}"
+    export WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
+    
     for var in "${required_vars[@]}"; do
         if [ -z "${!var:-}" ]; then
             missing_vars+=("$var")

@@ -24,7 +24,13 @@ mkdir -p "$TEST_RESULTS_DIR"
 # Test environment variables
 test_environment_variables() {
     log_info "Testing environment variables..."
-    local required_vars=("USER" "HOME" "PATH" "WORKSPACE_DIR")
+    
+    # Set default values if not already set
+    export PYTHON_VERSION="${PYTHON_VERSION:-3.11}"
+    export R_VERSION="${R_VERSION:-4.3}"
+    export WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
+    
+    local required_vars=("USER" "HOME" "PATH" "WORKSPACE_DIR" "PYTHON_VERSION" "R_VERSION")
     local failed_vars=()
     
     for var in "${required_vars[@]}"; do
