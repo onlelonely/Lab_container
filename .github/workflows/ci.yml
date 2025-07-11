@@ -176,7 +176,7 @@ jobs:
     - name: Run test suite
       run: |
         devcontainer exec --workspace-folder . \
-          bash .devcontainer/scripts/manage/test-runner.sh ${{ matrix.test-suite }} false true
+          bash /workspace/.devcontainer/scripts/manage/test-runner.sh ${{ matrix.test-suite }} false true
     
     - name: Upload test results
       if: always()
