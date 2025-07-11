@@ -1,7 +1,10 @@
-# Minimal bioinformatics Python packages (essential only)
-# Simplified for stable installation
+# Auto-generated requirements for profile: Bioinformatics
+# Generated on: 西元2025年07月12日 (週六) 01時52分34秒 CST
 
-# Basic genomics tools
-pybedtools
-pyBigWig
-multiqc
+biopython
+pysam
+pyvcf
+pandas
+numpy
+matplotlib
+seaborn
