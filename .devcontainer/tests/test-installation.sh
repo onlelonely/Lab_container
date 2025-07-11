@@ -78,7 +78,7 @@ test_conda_packages() {
     local failed_packages=()
     
     for package in "${packages[@]}"; do
-        if micromamba list | grep -q "^$package"; then
+        if conda list | grep -q "^$package"; then
             log_success "✓ $package installed correctly"
             echo "PASS: Conda package $package" >> "$TEST_RESULTS_FILE"
         else
@@ -126,7 +126,7 @@ test_jupyter_functionality() {
 
 test_development_tools() {
     log_info "Testing development tools..."
-    local tools=("git" "curl" "wget" "python" "R" "micromamba")
+    local tools=("git" "curl" "wget" "python" "R" "conda")
     local failed_tools=()
     
     for tool in "${tools[@]}"; do
