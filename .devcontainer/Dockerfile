@@ -42,11 +42,11 @@ RUN if ! getent group $USER_GID > /dev/null 2>&1; then \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Install miniconda and micromamba
+# Install miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
     && bash miniconda.sh -b -p /opt/conda \
     && rm miniconda.sh \
-    && /opt/conda/bin/conda install mamba micromamba -c conda-forge -y \
+    && /opt/conda/bin/conda install mamba -c conda-forge -y \
     && chown -R $USERNAME:$USERNAME /opt/conda
 
 # Stage 2: Development tools installation
@@ -84,7 +84,7 @@ COPY configs/r/core-packages.R /tmp/core-packages.R
 # Install core packages with robust error handling
 RUN echo "Installing core packages..." && \
     echo "1. Updating conda environment..." && \
-    /opt/conda/bin/micromamba install -c conda-forge -c bioconda -c r \
+    /opt/conda/bin/conda install -c conda-forge -c bioconda -c r \
         python=3.11 r-base=4.3 jupyter jupyterlab notebook pip git curl wget --yes && \
     echo "2. Installing Python packages..." && \
     /opt/conda/bin/pip install --no-cache-dir -r /tmp/requirements-core.txt && \
@@ -111,15 +111,15 @@ ARG INSTALL_EXTENDED_PACKAGES=false
 
 RUN echo "Installing extended packages..." && \
     if [ "$INSTALL_EXTENDED_PACKAGES" = "true" ]; then \
-        /opt/conda/bin/micromamba env update -f /tmp/environment-extended.yml && \
+        /opt/conda/bin/conda env update -f /tmp/environment-extended.yml && \
         /opt/conda/bin/pip install -r /tmp/requirements-extended.txt; \
     fi && \
     /opt/conda/bin/pip install -r /tmp/requirements-bioinformatics.txt && \
     if [ "$INSTALL_BIOCONDUCTOR" = "true" ]; then \
-        Rscript /tmp/bioconductor-packages.R; \
+        /opt/conda/bin/Rscript /tmp/bioconductor-packages.R; \
     fi && \
     if [ "$INSTALL_EXTENDED_PACKAGES" = "true" ]; then \
-        Rscript /tmp/extended-packages.R; \
+        /opt/conda/bin/Rscript /tmp/extended-packages.R; \
     fi && \
     echo "Extended packages installed successfully"
 
@@ -146,7 +146,7 @@ WORKDIR /workspace
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python3 -c "import sys; sys.exit(0)" && \
         R -e "q(status=0)" && \
-        /opt/conda/bin/micromamba info > /dev/null
+        /opt/conda/bin/conda info > /dev/null
 
 # Default command
 CMD ["sleep", "infinity"]
