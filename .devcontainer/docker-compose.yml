@@ -11,7 +11,7 @@ services:
         - USER_UID=1000
         - USER_GID=1000
     volumes:
-      - ../..:/workspace:cached
+      - ..:/workspace:cached
       - python_packages:/opt/conda/lib/python3.11/site-packages:cached
       - r_packages:/opt/conda/lib/R/library:cached
       - ~/.ssh:/home/devuser/.ssh:ro
@@ -46,7 +46,7 @@ services:
         - USER_UID=1000
         - USER_GID=1000
     volumes:
-      - ../..:/workspace:cached
+      - ..:/workspace:cached
       - python_packages_core:/opt/conda/lib/python3.11/site-packages:cached
       - r_packages_core:/opt/conda/lib/R/library:cached
     environment:
@@ -74,7 +74,7 @@ services:
         - INSTALL_BIOCONDUCTOR=true
         - INSTALL_EXTENDED_PACKAGES=true
     volumes:
-      - ../..:/workspace:cached
+      - ..:/workspace:cached
       - python_packages_extended:/opt/conda/lib/python3.11/site-packages:cached
       - r_packages_extended:/opt/conda/lib/R/library:cached
     environment:
