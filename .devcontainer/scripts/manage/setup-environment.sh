@@ -73,6 +73,9 @@ generate_configurations() {
         generate_conda_environment
     fi
     
+    # 生成 Docker 配置範本
+    generate_docker_templates
+    
     success_msg "配置檔案生成完成"
 }
 
@@ -160,6 +163,18 @@ EOF
     done
     
     info_msg "已生成 conda 環境檔案: $conda_file"
+}
+
+# 生成 Docker 配置範本
+generate_docker_templates() {
+    info_msg "生成 Docker 配置範本..."
+    
+    # 執行範本生成器
+    if [ -f ".devcontainer/scripts/utils/template-generator.sh" ]; then
+        bash .devcontainer/scripts/utils/template-generator.sh
+    else
+        warning_msg "找不到範本生成器，跳過 Docker 配置生成"
+    fi
 }
 
 # 自訂環境設定

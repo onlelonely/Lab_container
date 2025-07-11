@@ -209,6 +209,37 @@ check_network() {
     fi
 }
 
+# 檢查專用工具容器狀態
+check_tool_containers() {
+    echo ""
+    echo -e "${GREEN}🔬 專用工具容器${NC}"
+    echo "----------------"
+    
+    # 檢查是否有 docker-compose.tools.yml
+    if [ -f ".devcontainer/docker-compose.tools.yml" ]; then
+        echo "工具容器配置: ✅ 可用"
+        
+        # 檢查各工具容器狀態
+        local tools=("gatk-tools" "colabfold" "autodock")
+        for tool in "${tools[@]}"; do
+            if docker ps --format "table {{.Names}}" | grep -q "devcontainer-${tool%-*}"; then
+                echo "  ✅ $tool (運行中)"
+            else
+                echo "  ❌ $tool (未運行)"
+            fi
+        done
+        
+        # 檢查工具管理器
+        if [ -f ".devcontainer/scripts/manage/tool-manager.sh" ]; then
+            echo "工具管理器: ✅ 可用"
+        else
+            echo "工具管理器: ❌ 不可用"
+        fi
+    else
+        echo "工具容器配置: ❌ 未設定"
+    fi
+}
+
 # 檢查容器狀態
 check_container_status() {
     echo ""
@@ -246,6 +277,9 @@ show_quick_commands() {
     echo ""
     echo "套件管理:"
     echo "  bash .devcontainer/scripts/utils/package-manager.sh"
+    echo ""
+    echo "工具管理:"
+    echo "  bash .devcontainer/scripts/manage/tool-manager.sh"
     echo ""
     echo "檢查狀態:"
     echo "  bash .devcontainer/scripts/manage/devcontainer-status.sh"
@@ -295,6 +329,7 @@ main_status() {
     check_system_resources
     check_network
     check_container_status
+    check_tool_containers
     show_runtime_info
     show_quick_commands
     
