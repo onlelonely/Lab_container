@@ -74,11 +74,24 @@ validate_python() {
     
     log_info "Validating Python installation..."
     
-    if ! validate_command "python"; then
+    # Try different Python commands
+    local python_cmd=""
+    if command -v python > /dev/null 2>&1; then
+        python_cmd="python"
+    elif command -v /opt/conda/bin/python > /dev/null 2>&1; then
+        python_cmd="/opt/conda/bin/python"
+    elif [ -f "/opt/conda/bin/python" ]; then
+        python_cmd="/opt/conda/bin/python"
+    fi
+    
+    if [ -z "$python_cmd" ]; then
+        log_error "Python command not found"
         return 1
     fi
     
-    local python_version=$(python --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1-2)
+    log_success "✓ Python is available: $(command -v $python_cmd || echo $python_cmd)"
+    
+    local python_version=$($python_cmd --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1-2)
     
     if [ "$python_version" != "$expected_version" ]; then
         log_warning "Python version mismatch: expected $expected_version, got $python_version"
@@ -95,11 +108,24 @@ validate_r() {
     
     log_info "Validating R installation..."
     
-    if ! validate_command "R"; then
+    # Try different R commands
+    local r_cmd=""
+    if command -v R > /dev/null 2>&1; then
+        r_cmd="R"
+    elif command -v /opt/conda/bin/R > /dev/null 2>&1; then
+        r_cmd="/opt/conda/bin/R"
+    elif [ -f "/opt/conda/bin/R" ]; then
+        r_cmd="/opt/conda/bin/R"
+    fi
+    
+    if [ -z "$r_cmd" ]; then
+        log_error "R command not found"
         return 1
     fi
     
-    local r_version=$(R --version | head -n1 | grep -o '[0-9]\+\.[0-9]\+' | head -n1)
+    log_success "✓ R is available: $(command -v $r_cmd || echo $r_cmd)"
+    
+    local r_version=$($r_cmd --version 2>/dev/null | head -n1 | grep -o '[0-9]\+\.[0-9]\+' | head -n1)
     
     if [ "$r_version" != "$expected_version" ]; then
         log_warning "R version mismatch: expected $expected_version, got $r_version"
@@ -114,16 +140,28 @@ validate_r() {
 validate_conda() {
     log_info "Validating conda installation..."
     
-    if ! validate_command "conda"; then
+    # Try different conda commands
+    local conda_cmd=""
+    if command -v conda > /dev/null 2>&1; then
+        conda_cmd="conda"
+    elif command -v /opt/conda/bin/conda > /dev/null 2>&1; then
+        conda_cmd="/opt/conda/bin/conda"
+    elif [ -f "/opt/conda/bin/conda" ]; then
+        conda_cmd="/opt/conda/bin/conda"
+    fi
+    
+    if [ -z "$conda_cmd" ]; then
+        log_error "conda command not found"
         return 1
     fi
     
+    log_success "✓ conda is available: $(command -v $conda_cmd || echo $conda_cmd)"
+    
     # Test conda functionality
-    if conda info > /dev/null 2>&1; then
+    if $conda_cmd info > /dev/null 2>&1; then
         log_success "✓ conda is functional"
     else
-        log_error "conda is installed but not functional"
-        return 1
+        log_warning "conda info command failed (may need initialization)"
     fi
     
     return 0

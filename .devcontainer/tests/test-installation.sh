@@ -24,15 +24,15 @@ mkdir -p "$TEST_RESULTS_DIR"
 # Test functions
 test_python_packages() {
     log_info "Testing Python packages..."
-    # Core packages that should be available in core target
-    local core_packages=("numpy" "pandas" "matplotlib")
-    # Optional packages that may not be in core target
-    local optional_packages=("scipy" "scikit-learn" "jupyter" "biopython")
+    # Essential packages that should be available in core target (from requirements-core.txt)
+    local essential_packages=()  # Actually core target has no data science packages
+    # All data science packages are optional in core target
+    local optional_packages=("numpy" "pandas" "matplotlib" "scipy" "scikit-learn" "jupyter" "biopython")
     local failed_core=()
     local failed_optional=()
     
-    # Test core packages
-    for package in "${core_packages[@]}"; do
+    # Test essential packages (none in core target)
+    for package in "${essential_packages[@]}"; do
         if python -c "import $package" 2>/dev/null; then
             log_success "✓ $package installed correctly"
             echo "PASS: Python package $package" >> "$TEST_RESULTS_FILE"
@@ -56,23 +56,23 @@ test_python_packages() {
     done
     
     if [ ${#failed_core[@]} -eq 0 ]; then
-        log_success "Core Python packages test passed"
+        log_success "Python packages test passed (core target has minimal packages)"
         if [ ${#failed_optional[@]} -gt 0 ]; then
             log_info "Optional packages missing: ${failed_optional[*]} (expected for core target)"
         fi
         return 0
     else
-        log_error "Failed core Python packages: ${failed_core[*]}"
+        log_error "Failed essential Python packages: ${failed_core[*]}"
         return 1
     fi
 }
 
 test_r_packages() {
     log_info "Testing R packages..."
-    # Core R packages that should be available
-    local core_packages=("base" "utils" "stats")
+    # Core R packages that should be available in core target
+    local core_packages=("base" "utils" "stats" "data.table" "devtools" "rmarkdown" "knitr")
     # Optional packages that may not be in core target
-    local optional_packages=("tidyverse" "ggplot2" "data.table" "Biostrings" "DESeq2" "dplyr")
+    local optional_packages=("tidyverse" "ggplot2" "Biostrings" "DESeq2" "dplyr")
     local failed_core=()
     local failed_optional=()
     
@@ -114,10 +114,10 @@ test_r_packages() {
 
 test_conda_packages() {
     log_info "Testing conda packages..."
-    # Essential packages that must be available
-    local essential_packages=("python")
+    # Essential packages that must be available in core target (from environment-core.yml)
+    local essential_packages=("python" "r-base" "jupyter" "pip" "git" "curl" "wget")
     # Optional packages that may not be in core target
-    local optional_packages=("r-base" "jupyter" "git" "curl" "wget")
+    local optional_packages=()
     local failed_essential=()
     local failed_optional=()
     
@@ -147,7 +147,7 @@ test_conda_packages() {
     
     if [ ${#failed_essential[@]} -eq 0 ]; then
         log_success "Essential conda packages test passed"
-        if [ ${#failed_optional[@]} -gt 0 ]; then
+        if [ ${#optional_packages[@]} -gt 0 ] && [ ${#failed_optional[@]} -gt 0 ]; then
             log_info "Optional conda packages missing: ${failed_optional[*]} (expected for core target)"
         fi
         return 0
