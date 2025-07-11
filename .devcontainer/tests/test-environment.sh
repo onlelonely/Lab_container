@@ -157,18 +157,18 @@ test_conda_environment() {
     log_info "Testing conda environment..."
     local conda_failed=0
     
-    # Test micromamba command
-    if command -v micromamba > /dev/null 2>&1; then
-        log_success "✓ Micromamba available"
-        echo "PASS: Micromamba available" >> "$TEST_RESULTS_FILE"
+    # Test conda command
+    if command -v conda > /dev/null 2>&1; then
+        log_success "✓ Conda available"
+        echo "PASS: Conda available" >> "$TEST_RESULTS_FILE"
     else
-        log_error "✗ Micromamba not available"
-        echo "FAIL: Micromamba not available" >> "$TEST_RESULTS_FILE"
+        log_error "✗ Conda not available"
+        echo "FAIL: Conda not available" >> "$TEST_RESULTS_FILE"
         conda_failed=1
     fi
     
     # Test conda environment
-    if micromamba env list | grep -q "base"; then
+    if conda env list | grep -q "base"; then
         log_success "✓ Base conda environment exists"
         echo "PASS: Base conda environment exists" >> "$TEST_RESULTS_FILE"
     else
@@ -178,7 +178,7 @@ test_conda_environment() {
     fi
     
     # Test conda channels
-    local channels=$(micromamba config --get channels 2>/dev/null || echo "")
+    local channels=$(conda config --get channels 2>/dev/null || echo "")
     if echo "$channels" | grep -q "conda-forge"; then
         log_success "✓ Conda-forge channel configured"
         echo "PASS: Conda-forge channel configured" >> "$TEST_RESULTS_FILE"

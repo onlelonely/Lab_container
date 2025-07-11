@@ -149,7 +149,7 @@ validate_package() {
             fi
             ;;
         "conda")
-            if micromamba list | grep -q "^$package_name"; then
+            if conda list | grep -q "^$package_name"; then
                 log_success "✓ Conda package available: $package_name"
                 return 0
             else

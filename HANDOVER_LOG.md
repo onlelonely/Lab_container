@@ -1,14 +1,15 @@
 # Dev Container CI/CD 修復交接日誌
 
-**時間**: 2025-07-11 06:42 UTC  
-**狀態**: 第七輪修復已提交，CI/CD 進行中  
-**下一步**: 監控 CI/CD 結果 (Run ID: 16213618700)
+**時間**: 2025-07-11 07:19 UTC  
+**狀態**: 第八輪修復已提交，CI/CD 進行中 (5分鐘)  
+**下一步**: 監控 CI/CD 結果 (Run ID: 16214143985) - 預計需要100分鐘
 
 ## 問題總結
 
 ### 已修復問題
 - **Build Dev Container**: ✅ 已修復
-- **Test Dev Container**: 🔄 第七輪修復中 (Docker Compose 掛載路徑修正)
+- **Docker 路徑映射**: ✅ 第七輪已修復
+- **Test Dev Container**: 🔄 第八輪修復中 (readonly 變量重複聲明)
 
 ### 修復內容
 
@@ -96,6 +97,18 @@ target: core   # 使用輕量的 core target
 5. 基於第六輪調試輸出的精確分析
 ```
 
+#### 第八輪修復 (2025-07-11 07:13)
+修改了 logging.sh 中的 readonly 變量聲明：
+
+```bash
+# 主要修改
+1. 修復 readonly 變量重複聲明錯誤
+2. 為所有 readonly 變量添加存在性檢查
+3. 解決多個腳本 source logging.sh 時的衝突
+4. 修復變量：LOG_DIR, LOG_FILE, LOG_LEVEL_*, COLOR_*
+5. 保持所有現有功能完整性，防止循環依賴問題
+```
+
 ### 修復邏輯
 1. **第一輪問題根因**: devcontainer.json 使用 `devcontainer` 服務，但該服務使用 `final` target
 2. **Final target 問題**: 需要安裝所有擴展包，構建複雜且容易失敗
@@ -112,17 +125,25 @@ target: core   # 使用輕量的 core target
 13. **第六輪解決方案**: 回到相對路徑並添加調試步驟，確認容器內文件結構
 14. **第七輪問題根因**: 調試顯示容器內實際路徑為 /workspace/Lab_container/.devcontainer/
 15. **第七輪解決方案**: 修正 Docker Compose 掛載路徑從 ../.. 改為 ..，確保正確的文件映射
+16. **第八輪問題根因**: 路徑已修復，新錯誤為 readonly 變量重複聲明 (logging.sh 被多次 source)
+17. **第八輪解決方案**: 為所有 readonly 變量添加存在性檢查，防止重複聲明錯誤
 
 ## 當前 CI/CD 狀態
 
 ### 最新 Run 資訊
-- **Run ID**: 16213618700
-- **狀態**: in_progress
-- **開始時間**: 2025-07-11T06:42:02Z
-- **預計完成時間**: 2025-07-11T08:22:02Z (約 100 分鐘)
-- **觸發原因**: Push commit "Fix Docker Compose volume mount path"
+- **Run ID**: 16214143985
+- **狀態**: in_progress (5分鐘)
+- **開始時間**: 2025-07-11T07:13:42Z
+- **預計完成時間**: 2025-07-11T08:53:42Z (約 100 分鐘)
+- **觸發原因**: Push commit "Fix readonly variable redeclaration in logging.sh"
+- **當前進度**: 
+  - ✅ Validate Configuration (完成)
+  - ❌ Security Scan (權限問題，非關鍵)
+  - 🔄 Build Dev Container (final) 建構中
+  - 🔄 Build Dev Container (core) 建構中
 
 ### 歷史 Run 記錄
+- **16213618700**: failure (第七輪修復) - 路徑已修復，readonly 變量重複聲明錯誤
 - **16213118403**: failure (第六輪修復) - 成功調試，發現路徑映射問題
 - **16212708333**: failure (第五輪修復) - 測試腳本路徑錯誤 (絕對路徑)
 - **16211858813**: failure (第四輪修復) - 測試腳本路徑錯誤 (相對路徑)
@@ -137,15 +158,15 @@ target: core   # 使用輕量的 core target
 gh run list --limit 3
 
 # 持續監控當前運行
-gh run watch 16213618700
+gh run watch 16214143985
 
 # 查看詳細日誌 (完成後)
-gh run view 16213618700 --log
+gh run view 16214143985 --log
 
 # 查看重要的歷史 run
+gh run view 16213618700 --log  # 第七輪修復 - 路徑已修復，readonly 變量錯誤
 gh run view 16213118403 --log  # 第六輪修復 - 成功的調試日誌
 gh run view 16212708333 --log  # 第五輪修復失敗日誌
-gh run view 16211858813 --log  # 第四輪修復失敗日誌
 ```
 
 ## 預期結果
@@ -271,12 +292,13 @@ bd50a11 Fix Docker build issues by removing micromamba
 
 ## 後續處理建議
 
-1. **等待 CI/CD 完成**: 約 100 分鐘後檢查結果 (預計 2025-07-11 05:37 UTC)
+1. **等待 CI/CD 完成**: 約 100 分鐘後檢查結果 (預計 2025-07-11 08:53 UTC)
 2. **如果成功**: 任務完成，測試問題已解決
 3. **如果失敗**: 
    - 檢查日誌找出新的失敗原因
-   - 可能需要進一步簡化 devcontainer.json 配置
-   - 或者檢查 updateContentCommand 腳本是否正確
+   - 分析是否有新的 readonly 變量問題
+   - 檢查腳本依賴關係是否正確
+   - 考慮進一步簡化測試腳本
 
 ## 快速恢復工作指南
 
@@ -327,4 +349,4 @@ gh run list --limit 3
 - 閱讀 `.devcontainer/` 目錄下的配置文件
 - 檢查 `HANDOVER_LOG.md` 了解完整修復過程
 
-**最後更新**: 2025-07-11 06:43 UTC
+**最後更新**: 2025-07-11 07:19 UTC
