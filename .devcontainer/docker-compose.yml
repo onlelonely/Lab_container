@@ -4,7 +4,7 @@ services:
   devcontainer:
     build:
       context: .
-      dockerfile: .devcontainer/Dockerfile
+      dockerfile: .devcontainer/Dockerfile.generated
       args:
         PROFILE: 
         ENABLE_BIOINFORMATICS: ${ENABLE_BIOINFORMATICS:-false}
