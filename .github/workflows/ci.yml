@@ -1,13 +1,6 @@
 name: Dev Container CI
 
 on:
-  push:
-    branches: [ main, master, develop ]
-  pull_request:
-    branches: [ main, master ]
-  schedule:
-    # Run weekly on Sunday at 2 AM UTC
-    - cron: '0 2 * * 0'
   workflow_dispatch:
 
 env:
@@ -115,24 +108,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90  # Reduced from 120 to catch hanging builds faster
     needs: validate
-    if: needs.validate.outputs.should-build == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: always()
     
     strategy:
       matrix:
-        include:
-          # Fast CI build for all PRs
-          - profile: ci
-            test-level: quick
-            cache-key: ci-lightweight
-          # Full builds only on schedule or manual trigger
-          - profile: minimal
-            test-level: installation
-            cache-key: minimal-standard
-            if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-          - profile: full
-            test-level: installation  
-            cache-key: full-complete
-            if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        profile: [ci]  # Always build lightweight CI profile
+        test-level: [quick]
+        cache-key: [ci-lightweight]
       fail-fast: false
     
     steps:
@@ -227,17 +209,8 @@ jobs:
     
     strategy:
       matrix:
-        include:
-          # Quick tests for all builds
-          - test-suite: quick
-            profile: ci
-          # Installation tests only for non-CI profiles
-          - test-suite: installation
-            profile: minimal
-            if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-          - test-suite: installation  
-            profile: full
-            if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        test-suite: [quick]
+        profile: [ci]
       fail-fast: false
     
     steps:
