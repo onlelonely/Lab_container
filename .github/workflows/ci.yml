@@ -45,19 +45,22 @@ jobs:
           echo "jq not available, skipping JSON validation"
         fi
     
-    - name: Validate Dockerfile
+    - name: Generate environment and validate Dockerfile
       run: |
-        if [ -f .devcontainer/Dockerfile ]; then
-          echo "✓ Dockerfile exists"
+        # Generate environment configuration first
+        bash .devcontainer/scripts/manage/setup-environment.sh full
+        
+        if [ -f .devcontainer/Dockerfile.generated ]; then
+          echo "✓ Dockerfile.generated exists"
           # Basic Dockerfile linting
-          if grep -q "FROM" .devcontainer/Dockerfile; then
-            echo "✓ Dockerfile has FROM instruction"
+          if grep -q "FROM" .devcontainer/Dockerfile.generated; then
+            echo "✓ Dockerfile.generated has FROM instruction"
           else
-            echo "✗ Dockerfile missing FROM instruction"
+            echo "✗ Dockerfile.generated missing FROM instruction"
             exit 1
           fi
         else
-          echo "✗ Dockerfile not found"
+          echo "✗ Dockerfile.generated not found"
           exit 1
         fi
     
@@ -102,9 +105,9 @@ jobs:
     needs: validate
     if: needs.validate.outputs.should-build == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     
-    strategy:
+strategy:
       matrix:
-        target: [core, final]
+        profile: [minimal, full]
       fail-fast: false
     
     steps:
@@ -122,6 +125,10 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Generate environment configuration
+      run: |
+        bash .devcontainer/scripts/manage/setup-environment.sh ${{ matrix.profile }}
+    
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -131,14 +138,13 @@ jobs:
           type=ref,event=branch
           type=ref,event=pr
           type=schedule,pattern={{date 'YYYYMMDD'}}
-          type=sha,prefix=${{ matrix.target }}-
+          type=sha,prefix=${{ matrix.profile }}-
     
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: .devcontainer
-        file: .devcontainer/Dockerfile
-        target: ${{ matrix.target }}
+        context: .
+        file: .devcontainer/Dockerfile.generated
         platforms: linux/amd64
         push: false  # Disable push to fix permission error for now
         tags: ${{ steps.meta.outputs.tags }}
@@ -146,8 +152,8 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
-          INSTALL_BIOCONDUCTOR=${{ matrix.target == 'final' }}
-          INSTALL_EXTENDED_PACKAGES=false  # Disable extended packages to focus on core
+          PROFILE=${{ matrix.profile }}
+          ENABLE_BIOINFORMATICS=${{ matrix.profile == 'full' }}
 
   test:
     name: Test Dev Container
