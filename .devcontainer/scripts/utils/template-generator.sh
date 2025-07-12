@@ -191,10 +191,12 @@ EOF
     if [ "${ENABLE_RSTUDIO:-false}" == "true" ]; then
         cat >> "$output_file" << EOF
 # 安裝 RStudio Server
-RUN wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-2023.12.1-402-amd64.deb \\
-    && dpkg -i rstudio-server-2023.12.1-402-amd64.deb || true \\
-    && apt-get -f install -y \\
-    && rm rstudio-server-2023.12.1-402-amd64.deb
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
+    && apt-get install -y wget gdebi-core \\
+    && wget -q https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2024.04.2-764-amd64.deb \\
+    && gdebi -n rstudio-server-2024.04.2-764-amd64.deb \\
+    && rm rstudio-server-2024.04.2-764-amd64.deb \\
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 EOF
     fi

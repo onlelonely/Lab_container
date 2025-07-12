@@ -1,5 +1,5 @@
 {
-  "name": " Dev Container",
+  "name": "Full Dev Container",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
@@ -31,11 +31,11 @@
     }
   },
   "remoteEnv": {
-    "PROFILE": "",
+    "PROFILE": "Full",
     "PYTHON_VERSION": "3.11",
     "R_VERSION": "4.3",
-    "ENABLE_JUPYTER": "",
-    "ENABLE_RSTUDIO": "",
+    "ENABLE_JUPYTER": "true",
+    "ENABLE_RSTUDIO": "true",
     "ENABLE_BIOINFORMATICS": "${ENABLE_BIOINFORMATICS:-false}"
   },
   "postCreateCommand": "bash .devcontainer/scripts/utils/post-create.sh",

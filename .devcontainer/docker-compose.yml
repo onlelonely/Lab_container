@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile.generated
       args:
-        PROFILE: 
+        PROFILE: Full
         ENABLE_BIOINFORMATICS: ${ENABLE_BIOINFORMATICS:-false}
     volumes:
       - ../..:/workspace:cached
@@ -14,9 +14,9 @@ services:
       - ~/.gitconfig:/home/vscode/.gitconfig:ro
     command: sleep infinity
     environment:
-      - PROFILE=
-      - ENABLE_JUPYTER=
-      - ENABLE_RSTUDIO=
+      - PROFILE=Full
+      - ENABLE_JUPYTER=true
+      - ENABLE_RSTUDIO=true
       - ENABLE_BIOINFORMATICS=${ENABLE_BIOINFORMATICS:-false}
     ports:
       - "8888:8888"  # Jupyter Lab
