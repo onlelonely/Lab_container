@@ -35,7 +35,7 @@ COPY .devcontainer/configs/ /tmp/configs/
 
 # 安裝 conda 環境
 RUN if [ -f "/tmp/configs/conda/environment-full.yml" ]; then \
-        conda env update --file /tmp/configs/conda/environment-full.yml --name base; \
+        conda env update --file /tmp/configs/conda/environment-full.yml --name base --prune; \
     fi
 
 # 安裝 Python 套件
