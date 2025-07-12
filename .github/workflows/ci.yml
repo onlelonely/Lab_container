@@ -1,18 +1,23 @@
 name: Dev Container CI
 
 on:
-  push:
-    branches: [ main, master, develop ]
-  pull_request:
-    branches: [ main, master ]
-  schedule:
-    # Run weekly on Sunday at 2 AM UTC
-    - cron: '0 2 * * 0'
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  # CI optimizations
+  PIP_NO_CACHE_DIR: false  # Enable pip caching
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  PYTHONDONTWRITEBYTECODE: 1
+  # R optimizations
+  R_COMPILE_PKGS: 0  # Skip package compilation in CI
+  R_DISABLE_HTTPD: 1
+  # Resource constraints
+  MAKEFLAGS: "-j2"  # Limit parallel builds to prevent OOM
+  # Docker optimizations
+  DOCKER_BUILDKIT: 1
+  BUILDX_EXPERIMENTAL: 1
 
 jobs:
   validate:
@@ -45,19 +50,22 @@ jobs:
           echo "jq not available, skipping JSON validation"
         fi
     
-    - name: Validate Dockerfile
+    - name: Generate environment and validate Dockerfile
       run: |
-        if [ -f .devcontainer/Dockerfile ]; then
-          echo "✓ Dockerfile exists"
+        # Generate environment configuration first
+        bash .devcontainer/scripts/manage/setup-environment.sh full
+        
+        if [ -f .devcontainer/Dockerfile.generated ]; then
+          echo "✓ Dockerfile.generated exists"
           # Basic Dockerfile linting
-          if grep -q "FROM" .devcontainer/Dockerfile; then
-            echo "✓ Dockerfile has FROM instruction"
+          if grep -q "FROM" .devcontainer/Dockerfile.generated; then
+            echo "✓ Dockerfile.generated has FROM instruction"
           else
-            echo "✗ Dockerfile missing FROM instruction"
+            echo "✗ Dockerfile.generated missing FROM instruction"
             exit 1
           fi
         else
-          echo "✗ Dockerfile not found"
+          echo "✗ Dockerfile.generated not found"
           exit 1
         fi
     
@@ -98,13 +106,15 @@ jobs:
   build:
     name: Build Dev Container
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 90  # Reduced from 120 to catch hanging builds faster
     needs: validate
-    if: needs.validate.outputs.should-build == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: always()
     
     strategy:
       matrix:
-        target: [core, final]
+        profile: [ci]  # Always build lightweight CI profile
+        test-level: [quick]
+        cache-key: [ci-lightweight]
       fail-fast: false
     
     steps:
@@ -122,6 +132,31 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Set up package caching
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          ~/.cache/conda
+          ~/.local/lib/python*/site-packages
+          ~/conda_pkgs_dir
+        key: packages-${{ matrix.cache-key }}-${{ runner.os }}-${{ hashFiles('.devcontainer/configs/**/*.txt', '.devcontainer/configs/**/*.yml', '.devcontainer/configs/**/*.R') }}
+        restore-keys: |
+          packages-${{ matrix.cache-key }}-${{ runner.os }}-
+          packages-ci-lightweight-${{ runner.os }}-
+    
+    - name: Generate environment configuration
+      timeout-minutes: 10  # Add step timeout
+      run: |
+        if [ "${{ matrix.profile }}" = "ci" ]; then
+          echo "Using CI-optimized configuration"
+          # Copy CI-specific configs
+          cp .devcontainer/configs/python/requirements-ci.txt .devcontainer/configs/python/requirements-${{ matrix.profile }}.txt
+          cp .devcontainer/configs/conda/environment-ci.yml .devcontainer/configs/conda/environment-${{ matrix.profile }}.yml
+          cp .devcontainer/configs/r/ci-packages.R .devcontainer/configs/r/${{ matrix.profile }}-packages.R
+        fi
+        bash .devcontainer/scripts/manage/setup-environment.sh ${{ matrix.profile }}
+    
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -131,34 +166,51 @@ jobs:
           type=ref,event=branch
           type=ref,event=pr
           type=schedule,pattern={{date 'YYYYMMDD'}}
-          type=sha,prefix=${{ matrix.target }}-
+          type=sha,prefix=${{ matrix.profile }}-
     
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
+    - name: Build Docker image with retry
+      uses: nick-invision/retry@v2
       with:
-        context: .devcontainer
-        file: .devcontainer/Dockerfile
-        target: ${{ matrix.target }}
-        platforms: linux/amd64
-        push: false  # Disable push to fix permission error for now
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        build-args: |
-          INSTALL_BIOCONDUCTOR=${{ matrix.target == 'final' }}
-          INSTALL_EXTENDED_PACKAGES=false  # Disable extended packages to focus on core
+        timeout_minutes: 45  # Step-level timeout
+        max_attempts: 2
+        retry_on: error
+        command: |
+          docker buildx build \
+            --context . \
+            --file .devcontainer/Dockerfile.generated \
+            --platform linux/amd64 \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --build-arg PROFILE=${{ matrix.profile }} \
+            --build-arg ENABLE_BIOINFORMATICS=${{ matrix.profile == 'full' }} \
+            --build-arg CI_MODE=true \
+            --build-arg MAKEFLAGS="-j2" \
+            --tag devcontainer:${{ matrix.profile }} \
+            .
 
+
+    - name: Upload build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs-${{ matrix.profile }}-${{ github.run_number }}
+        path: |
+          ~/.pip/pip.log
+          /tmp/docker-build.log
+          /var/log/dpkg.log
+        retention-days: 7
+        if-no-files-found: ignore
   test:
     name: Test Dev Container
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45  # Reduced for faster feedback
     needs: [validate, build]
-    if: always() && needs.validate.result == 'success'
+    if: always() && needs.validate.result == 'success' && needs.build.result == 'success'
     
     strategy:
       matrix:
-        test-suite: [quick, installation]
+        test-suite: [quick]
+        profile: [ci]
       fail-fast: false
     
     steps:

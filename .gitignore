@@ -145,3 +145,7 @@ jspm_packages/
 # Environment-specific folders
 .terraform/
 .vagrant/
+# Test artifacts
+backups/
+test-logs/
+*-test-*.sh

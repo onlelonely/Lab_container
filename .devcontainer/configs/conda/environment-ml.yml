@@ -1,0 +1,20 @@
+# Auto-generated conda environment for profile: Machine Learning
+# Generated on: 西元2025年07月12日 (週六) 08時04分16秒 CST
+name: machine learning  # 轉換為小寫
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - python=3.11
+  - r-base=4.3
+  - pip
+  - pip:
+    - scikit-learn
+    - tensorflow
+    - torch
+    - pandas
+    - numpy
+    - matplotlib
+    - seaborn
+    - jupyterlab

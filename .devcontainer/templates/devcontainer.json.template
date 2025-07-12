@@ -1,5 +1,5 @@
 {
-  "name": "Full Dev Container",
+  "name": "${PROFILE_NAME} Dev Container",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
@@ -9,11 +9,7 @@
       "extensions": [
         "ms-python.python",
         "ms-python.black-formatter",
-        "ms-toolsai.jupyter",
-        "REditorSupport.r",
-        "RDebugger.r-debugger",
-        "ms-vscode.hexeditor",
-        "redhat.vscode-yaml"
+        "ms-toolsai.jupyter"${R_EXTENSIONS}${BIOINFORMATICS_EXTENSIONS}
       ],
       "settings": {
         "python.defaultInterpreterPath": "/opt/conda/bin/python",
@@ -23,19 +19,16 @@
             "path": "/opt/conda/bin/python",
             "type": "pythonEnvironment"
           }
-        ],
-        "r.rterm.linux": "/usr/bin/R",
-        "r.rterm.option": ["--no-save", "--no-restore"],
-        "r.sessionWatcher": true
+        ]${R_SETTINGS}
       }
     }
   },
   "remoteEnv": {
-    "PROFILE": "Full",
+    "PROFILE": "${PROFILE_NAME}",
     "PYTHON_VERSION": "3.11",
     "R_VERSION": "4.3",
-    "ENABLE_JUPYTER": "true",
-    "ENABLE_RSTUDIO": "true",
+    "ENABLE_JUPYTER": "${ENABLE_JUPYTER}",
+    "ENABLE_RSTUDIO": "${ENABLE_RSTUDIO}",
     "ENABLE_BIOINFORMATICS": "${ENABLE_BIOINFORMATICS:-false}"
   },
   "postCreateCommand": "bash .devcontainer/scripts/utils/post-create.sh",

@@ -1,0 +1,172 @@
+# docker-compose.tools.yml - 專用生物資訊工具容器配置
+# 此檔案定義重量級生物資訊工具的容器服務
+
+version: '3.8'
+
+services:
+  # GATK 變異呼叫工具
+  gatk-tools:
+    image: broadinstitute/gatk:4.4.0.0
+    container_name: devcontainer-gatk
+    volumes:
+      - ../..:/workspace:cached
+      - ./data:/workspace/data
+      - ./results:/workspace/results
+      - ./tmp:/tmp
+    working_dir: /workspace
+    profiles: ["bioinformatics", "gatk"]
+    environment:
+      - JAVA_OPTS=-Xmx8g -XX:+UseG1GC
+      - GATK_LOCAL_JAR=/gatk/gatk-package-4.4.0.0-local.jar
+    command: tail -f /dev/null
+    networks:
+      - biotools-net
+    labels:
+      - "description=GATK variant calling toolkit"
+      - "version=4.4.0.0"
+
+  # ColabFold 蛋白質結構預測
+  colabfold:
+    image: colabfold/colabfold:1.5.3-cuda11.8.0
+    container_name: devcontainer-colabfold
+    volumes:
+      - ../..:/workspace:cached
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./results:/workspace/results
+      - colabfold-cache:/cache
+    working_dir: /workspace
+    profiles: ["structure", "colabfold"]
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - COLABFOLD_CACHE_DIR=/cache
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: tail -f /dev/null
+    networks:
+      - biotools-net
+    labels:
+      - "description=ColabFold protein structure prediction"
+      - "version=1.5.3"
+      - "gpu=required"
+
+  # ColabFold CPU 版本 (無 GPU 時使用)
+  colabfold-cpu:
+    image: colabfold/colabfold:1.5.3
+    container_name: devcontainer-colabfold-cpu
+    volumes:
+      - ../..:/workspace:cached
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./results:/workspace/results
+      - colabfold-cache:/cache
+    working_dir: /workspace
+    profiles: ["structure-cpu", "colabfold-cpu"]
+    environment:
+      - COLABFOLD_CACHE_DIR=/cache
+      - OMP_NUM_THREADS=4
+    command: tail -f /dev/null
+    networks:
+      - biotools-net
+    labels:
+      - "description=ColabFold protein structure prediction (CPU only)"
+      - "version=1.5.3"
+      - "gpu=not_required"
+
+  # AutoDock Vina 分子對接
+  autodock:
+    image: ccsb/autodock-vina:1.2.0
+    container_name: devcontainer-autodock
+    volumes:
+      - ../..:/workspace:cached
+      - ./data:/workspace/data
+      - ./results:/workspace/results
+      - ./models:/workspace/models
+    working_dir: /workspace
+    profiles: ["molecular", "autodock"]
+    environment:
+      - OMP_NUM_THREADS=4
+    command: tail -f /dev/null
+    networks:
+      - biotools-net
+    labels:
+      - "description=AutoDock Vina molecular docking"
+      - "version=1.2.0"
+
+  # 生物資訊工具管理服務
+  biotools-manager:
+    image: alpine:3.18
+    container_name: devcontainer-biotools-manager
+    volumes:
+      - ../..:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./scripts:/scripts
+    working_dir: /workspace
+    profiles: ["tools", "manager"]
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    command: tail -f /dev/null
+    networks:
+      - biotools-net
+    labels:
+      - "description=Bio-tools container manager"
+
+  # 資料庫服務 (可選)
+  biodata-db:
+    image: postgres:15-alpine
+    container_name: devcontainer-biodata-db
+    volumes:
+      - biodata-db:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    profiles: ["database", "biodata"]
+    environment:
+      - POSTGRES_DB=biodata
+      - POSTGRES_USER=biouser
+      - POSTGRES_PASSWORD=biopass123
+    ports:
+      - "5432:5432"
+    networks:
+      - biotools-net
+    labels:
+      - "description=PostgreSQL database for biological data"
+
+  # Redis 快取服務 (可選)
+  redis-cache:
+    image: redis:7-alpine
+    container_name: devcontainer-redis
+    volumes:
+      - redis-cache:/data
+    profiles: ["cache", "redis"]
+    ports:
+      - "6379:6379"
+    networks:
+      - biotools-net
+    labels:
+      - "description=Redis cache for analysis results"
+
+networks:
+  biotools-net:
+    driver: bridge
+    labels:
+      - "description=Network for bioinformatics tools"
+
+volumes:
+  colabfold-cache:
+    driver: local
+    labels:
+      - "description=ColabFold model cache"
+  biodata-db:
+    driver: local
+    labels:
+      - "description=PostgreSQL database storage"
+  redis-cache:
+    driver: local
+    labels:
+      - "description=Redis cache storage"

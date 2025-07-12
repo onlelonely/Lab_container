@@ -1,10 +1,11 @@
-# Auto-generated requirements for profile: Bioinformatics
+# Auto-generated requirements for profile: Machine Learning
 # Generated on: 西元2025年07月12日 (週六) 08時04分16秒 CST
 
-biopython
-pysam
-pyvcf
+scikit-learn
+tensorflow
+torch
 pandas
 numpy
 matplotlib
 seaborn
+jupyterlab

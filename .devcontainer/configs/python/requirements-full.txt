@@ -1,0 +1,15 @@
+# Auto-generated requirements for profile: Full
+# Generated on: 西元2025年07月12日 (週六) 10時24分59秒 CST
+
+biopython
+pysam
+pyvcf
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+scikit-learn
+tensorflow
+torch
+jupyterlab

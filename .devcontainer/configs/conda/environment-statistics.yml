@@ -1,0 +1,17 @@
+# Auto-generated conda environment for profile: Statistics
+# Generated on: 西元2025年07月12日 (週六) 08時04分16秒 CST
+name: statistics  # 轉換為小寫
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - python=3.11
+  - r-base=4.3
+  - pip
+  - pip:
+    - numpy
+    - scipy
+    - statsmodels
+    - pandas
+    - matplotlib

@@ -3,99 +3,70 @@ version: '3.8'
 services:
   devcontainer:
     build:
-      context: .
-      dockerfile: Dockerfile
-      target: core
+      context: ..
+      dockerfile: .devcontainer/Dockerfile.generated
       args:
-        - USERNAME=devuser
-        - USER_UID=1000
-        - USER_GID=1000
+        PROFILE: Full
+        ENABLE_BIOINFORMATICS: ${ENABLE_BIOINFORMATICS:-false}
     volumes:
-      - ..:/workspace:cached
-      - python_packages:/opt/conda/lib/python3.11/site-packages:cached
-      - r_packages:/opt/conda/lib/R/library:cached
-      - ~/.ssh:/home/devuser/.ssh:ro
-      - ~/.gitconfig:/home/devuser/.gitconfig:ro
-    environment:
-      - PYTHON_VERSION=3.11
-      - R_VERSION=4.3
-      - WORKSPACE_DIR=/workspace
-      - PARALLEL_JOBS=${PARALLEL_JOBS:-4}
-      - ENABLE_LOGGING=${ENABLE_LOGGING:-true}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    working_dir: /workspace
+      - ../..:/workspace:cached
+      - ~/.ssh:/home/vscode/.ssh:ro
+      - ~/.gitconfig:/home/vscode/.gitconfig:ro
     command: sleep infinity
-    user: devuser
-    stdin_open: true
-    tty: true
-    healthcheck:
-      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+    environment:
+      - PROFILE=Full
+      - ENABLE_JUPYTER=true
+      - ENABLE_RSTUDIO=true
+      - ENABLE_BIOINFORMATICS=${ENABLE_BIOINFORMATICS:-false}
+    ports:
+      - "8888:8888"  # Jupyter Lab
+      - "8787:8787"  # RStudio Server
+    networks:
+      - devnet
 
-  # Core-only development container (faster startup)
-  devcontainer-core:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: core
-      args:
-        - USERNAME=devuser
-        - USER_UID=1000
-        - USER_GID=1000
-    volumes:
-      - ..:/workspace:cached
-      - python_packages_core:/opt/conda/lib/python3.11/site-packages:cached
-      - r_packages_core:/opt/conda/lib/R/library:cached
-    environment:
-      - PYTHON_VERSION=3.11
-      - R_VERSION=4.3
-      - WORKSPACE_DIR=/workspace
-    working_dir: /workspace
-    command: sleep infinity
-    user: devuser
-    stdin_open: true
-    tty: true
-    profiles:
-      - core
 
-  # Extended development container (full features)
-  devcontainer-extended:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: extended
-      args:
-        - USERNAME=devuser
-        - USER_UID=1000
-        - USER_GID=1000
-        - INSTALL_BIOCONDUCTOR=true
-        - INSTALL_EXTENDED_PACKAGES=true
+  gatk-tools:
+    image: broadinstitute/gatk:latest
     volumes:
-      - ..:/workspace:cached
-      - python_packages_extended:/opt/conda/lib/python3.11/site-packages:cached
-      - r_packages_extended:/opt/conda/lib/R/library:cached
-    environment:
-      - PYTHON_VERSION=3.11
-      - R_VERSION=4.3
-      - WORKSPACE_DIR=/workspace
-      - INSTALL_BIOCONDUCTOR=true
-      - INSTALL_EXTENDED_PACKAGES=true
-      - PARALLEL_JOBS=4
+      - ../..:/workspace:cached
+      - ./data:/workspace/data
+      - ./results:/workspace/results
     working_dir: /workspace
-    command: sleep infinity
-    user: devuser
-    stdin_open: true
-    tty: true
-    profiles:
-      - extended
+    profiles: ["bioinformatics", "gatk"]
+    environment:
+      - JAVA_OPTS=-Xmx8g
+    networks:
+      - devnet
+
+  colabfold:
+    image: colabfold/colabfold:latest
+    volumes:
+      - ../..:/workspace:cached
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./results:/workspace/results
+    working_dir: /workspace
+    profiles: ["structure", "colabfold"]
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    networks:
+      - devnet
+
+  autodock:
+    image: ccsb/autodock-vina:latest
+    volumes:
+      - ../..:/workspace:cached
+      - ./data:/workspace/data
+      - ./results:/workspace/results
+    working_dir: /workspace
+    profiles: ["molecular", "autodock"]
+    networks:
+      - devnet
+
+networks:
+  devnet:
+    driver: bridge
 
 volumes:
-  python_packages:
-  r_packages:
-  python_packages_core:
-  r_packages_core:
-  python_packages_extended:
-  r_packages_extended:
+  conda-cache:
+  r-libs:
