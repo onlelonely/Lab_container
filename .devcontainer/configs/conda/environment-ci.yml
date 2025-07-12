@@ -1,0 +1,22 @@
+# CI-friendly Conda environment (fast, reliable builds)
+# Generated for CI pipeline optimization
+name: base
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - python=3.11
+  - r-base=4.3
+  - pip
+  # Essential tools only (skip heavy bioinformatics packages in CI)
+  - pip:
+    - numpy>=1.24.0,<1.26.0
+    - pandas>=2.0.0,<2.2.0
+    - matplotlib>=3.7.0,<3.9.0
+    - jupyterlab>=4.0.0,<4.2.0
+    
+# Packages excluded from CI (too heavy/slow):
+# - fastqc, samtools, bcftools, bedtools (bioinformatics packages)
+# - tensorflow, torch (ML packages)
+# - Complex R packages with long compilation times
