@@ -171,17 +171,33 @@ backup_environment() {
     info_msg "備份環境到: $backup_dir"
     
     # 備份 Python 套件
-    pip freeze > "$backup_dir/requirements.txt"
+    if command -v pip &> /dev/null; then
+        pip freeze > "$backup_dir/requirements.txt"
+        success_msg "Python 套件已備份"
+    else
+        warning_msg "pip 不可用，跳過 Python 套件備份"
+    fi
     
     # 備份 R 套件
-    R -e "installed.packages()[,c('Package','Version')] |> write.csv('$backup_dir/r-packages.csv')" --quiet --no-restore
+    if command -v R &> /dev/null; then
+        R -e "installed.packages()[,c('Package','Version')] |> write.csv('$backup_dir/r-packages.csv')" --quiet --no-restore
+        success_msg "R 套件已備份"
+    else
+        warning_msg "R 不可用，跳過 R 套件備份"
+    fi
     
     # 備份 Conda 環境
-    conda env export > "$backup_dir/environment.yml"
+    if command -v conda &> /dev/null; then
+        conda env export > "$backup_dir/environment.yml"
+        success_msg "Conda 環境已備份"
+    else
+        warning_msg "conda 不可用，跳過 Conda 環境備份"
+    fi
     
     # 備份當前 profile
     if [ -f ".devcontainer/.current-profile" ]; then
         cp ".devcontainer/.current-profile" "$backup_dir/"
+        success_msg "Profile 設定已備份"
     fi
     
     success_msg "環境已備份至: $backup_dir"
