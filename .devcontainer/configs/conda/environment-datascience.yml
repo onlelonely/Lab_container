@@ -1,6 +1,6 @@
-# Auto-generated conda environment for profile: Bioinformatics
+# Auto-generated conda environment for profile: Data Science
 # Generated on: 西元2025年07月12日 (週六) 08時04分16秒 CST
-name: bioinformatics  # 轉換為小寫
+name: data science  # 轉換為小寫
 channels:
   - conda-forge
   - bioconda
@@ -8,17 +8,12 @@ channels:
 dependencies:
   - python=3.11
   - r-base=4.3
-  # 生物資訊工具
-  - fastqc
-  - samtools
-  - bcftools
-  - bedtools
   - pip
   - pip:
-    - biopython
-    - pysam
-    - pyvcf
     - pandas
     - numpy
     - matplotlib
     - seaborn
+    - plotly
+    - scikit-learn
+    - jupyterlab

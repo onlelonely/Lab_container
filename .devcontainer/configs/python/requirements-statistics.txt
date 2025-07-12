@@ -1,0 +1,8 @@
+# Auto-generated requirements for profile: Statistics
+# Generated on: 西元2025年07月12日 (週六) 08時04分16秒 CST
+
+numpy
+scipy
+statsmodels
+pandas
+matplotlib

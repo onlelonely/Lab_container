@@ -1,10 +1,10 @@
-# Auto-generated Dockerfile for profile: Bioinformatics
-# Generated on: 西元2025年07月12日 (週六) 02時05分16秒 CST
+# Auto-generated Dockerfile for profile: Full
+# Generated on: 西元2025年07月12日 (週六) 08時04分16秒 CST
 
 FROM mcr.microsoft.com/devcontainers/anaconda:0-3
 
 # 環境變數
-ENV PROFILE=Bioinformatics
+ENV PROFILE=Full
 ENV ENABLE_BIOINFORMATICS=true
 
 # 安裝系統套件
@@ -34,18 +34,18 @@ RUN wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-2023.1
 COPY .devcontainer/configs/ /tmp/configs/
 
 # 安裝 conda 環境
-RUN if [ -f "/tmp/configs/conda/environment-bioinformatics.yml" ]; then \
-        conda env update --file /tmp/configs/conda/environment-bioinformatics.yml --name base; \
+RUN if [ -f "/tmp/configs/conda/environment-full.yml" ]; then \
+        conda env update --file /tmp/configs/conda/environment-full.yml --name base; \
     fi
 
 # 安裝 Python 套件
-RUN if [ -f "/tmp/configs/python/requirements-bioinformatics.txt" ]; then \
-        pip install -r /tmp/configs/python/requirements-bioinformatics.txt; \
+RUN if [ -f "/tmp/configs/python/requirements-full.txt" ]; then \
+        pip install -r /tmp/configs/python/requirements-full.txt; \
     fi
 
 # 安裝 R 套件
-RUN if [ -f "/tmp/configs/r/bioinformatics-packages.R" ]; then \
-        Rscript /tmp/configs/r/bioinformatics-packages.R; \
+RUN if [ -f "/tmp/configs/r/full-packages.R" ]; then \
+        Rscript /tmp/configs/r/full-packages.R; \
     fi
 
 # 設定使用者

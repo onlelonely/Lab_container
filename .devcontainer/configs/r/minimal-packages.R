@@ -1,11 +1,11 @@
-# Auto-generated R packages installation script for profile: Bioinformatics
+# Auto-generated R packages installation script for profile: Minimal
 # Generated on: 西元2025年07月12日 (週六) 08時04分16秒 CST
 
 # 設定 CRAN mirror
 options(repos = c(CRAN = "https://cran.rstudio.com/"))
 
 # 安裝套件
-packages <- c("Biostrings", "GenomicRanges", "VariantAnnotation", "tidyverse")
+packages <- c("base", "utils")
 
 for (pkg in packages) {
     if (!require(pkg, character.only = TRUE)) {
@@ -14,4 +14,4 @@ for (pkg in packages) {
     }
 }
 
-cat("✅ R packages installation completed for profile: Bioinformatics\n")
+cat("✅ R packages installation completed for profile: Minimal\n")
